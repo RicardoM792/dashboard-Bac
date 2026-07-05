@@ -67,8 +67,9 @@ body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;backgroun
 .page{display:none;animation:fadeIn .3s ease}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
-@media(min-width:1600px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.chart-wrap{height:380px}.chart-wrap.lg{height:460px}}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+@media(min-width:1200px) and (max-width:1599px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1600px){.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.chart-wrap{height:380px}.chart-wrap.lg{height:460px}}
 .kpi-card{background:var(--bg-1);border:1px solid var(--border);border-radius:12px;padding:12px 14px;position:relative;overflow:hidden;transition:all .25s;box-shadow:var(--shadow)}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--verde-medio)}
 .kpi-label{font-size:9px;color:var(--text-2);text-transform:uppercase;letter-spacing:1.1px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:6px}
@@ -1185,7 +1186,7 @@ const CACHE_KEY = 'dashboard_cache_v2';
                         type: 'category',
                         title: { display: !!yTitle, text: yTitle || '', color: cc.text, font: { size: 8,
                                 weight: '600' } },
-                        ticks: { ...X_TICKS, color: cc.axisText,
+                        ticks: { ...X_TICKS, font: { ...X_TICKS.font, size: 10 }, color: cc.axisText,
                         callback: function(value) {  
                            return wrapLabel(this.getLabelForValue(value));
                         }  
@@ -1230,7 +1231,7 @@ const CACHE_KEY = 'dashboard_cache_v2';
                         type: 'category',
                         title: { display: !!yTitle, text: yTitle || '', color: cc.text, font: { size: 8,
                                 weight: '600' } },
-                        ticks: { ...X_TICKS, color: cc.axisText,
+                        ticks: { ...X_TICKS, font: { ...X_TICKS.font, size: 10 }, color: cc.axisText,
                         callback: function(value) {  
                            return wrapLabel(this.getLabelForValue(value));
                         }  
