@@ -172,6 +172,13 @@ table.data tbody tr:last-child td{border-bottom:none}
 .detalle-bloques{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px}
 .bloque-aseguradora{background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:4px solid var(--verde-intenso)}
 .bloque-aseguradora h3{color:var(--verde-bosque);margin-bottom:12px;text-align:center;font-size:14px;font-weight:700}
+.app-loading-overlay{position:fixed;inset:0;z-index:5000;background:var(--bg-0);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .35s ease}
+.app-loading-overlay.hidden{opacity:0;pointer-events:none}
+.app-loading-overlay i.fa-seedling{font-size:42px;color:var(--verde-intenso)}
+.app-loading-overlay h2{font-size:18px;font-weight:700;color:var(--verde-petroleo)}
+.app-loading-overlay p{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-top:-8px}
+.app-loading-spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--bg-3);border-top-color:var(--verde-intenso);animation:spin .8s linear infinite;margin-top:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:768px){
     .app{grid-template-columns:1fr}
     .app.sidebar-open .sidebar-overlay{display:block}
@@ -190,6 +197,12 @@ table.data tbody tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body data-theme="light">
+    <div class="app-loading-overlay" id="appLoadingOverlay">
+        <i class="fas fa-seedling"></i>
+        <h2>Banco Agrario</h2>
+        <p>Executive Commercial Dashboard</p>
+        <div class="app-loading-spinner"></div>
+    </div>
     <div class="app" id="app">
         <aside class="sidebar">
             <div class="brand">
@@ -348,12 +361,12 @@ table.data tbody tr:last-child td{border-bottom:none}
             lastSync: null
         };
         const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const GOOGLE_SHEET_ID = '1njXqvvbMslkFNpkVjlaOAfRx_ZsOw__7';
+        const GOOGLE_SHEET_ID = '1GDdp7XcO7BTwQggOZr-F8M7_c1V1VjjNKgxTdEFLWvw';
         const SHEET_GIDS = {
-            ventas: '1062291957',
-            devoCardif: '1249242649',
-            devoMapfre: '2053644164',
-            devoColmena: '2144968008'
+            ventas: '593907604',
+            devoCardif: '1231597316',
+            devoMapfre: '536363539',
+            devoColmena: '510208803'
         };
         const AUTO_REFRESH_MINUTES = 10;
         const COLORS = {
@@ -524,7 +537,7 @@ table.data tbody tr:last-child td{border-bottom:none}
             return a;
         }, {});
         const sortedYM = obj => Object.keys(obj).sort();
-        const sheetCsvUrl = gid => `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}`;
+        const sheetCsvUrl = gid => `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}&_t=${Date.now()}`;
         function parseCsv(text) {
             const rows = [];
             let row = [], field = '', inQuotes = false;
@@ -548,10 +561,12 @@ table.data tbody tr:last-child td{border-bottom:none}
             return rows;
         }
         async function fetchSheetAsJson(gid) {
-            const res = await fetch(sheetCsvUrl(gid));
+            const res = await fetch(sheetCsvUrl(gid), { cache: 'no-store' });
             if (!res.ok) throw new Error('No se pudo leer la hoja (gid ' + gid + ')');
             const csvText = await res.text();
+            if (/^\s*<(!DOCTYPE|html)/i.test(csvText)) throw new Error('La hoja (gid ' + gid + ') no devolvió CSV (revisa permisos de acceso al Google Sheet).');
             const rows = parseCsv(csvText);
+            console.log('gid ' + gid + ': ' + (rows.length - 1) + ' filas de datos recibidas');
             if (rows.length < 2) return [];
             const headers = rows[0].map(h => h.trim());
             return rows.slice(1).map(row => {
@@ -560,7 +575,7 @@ table.data tbody tr:last-child td{border-bottom:none}
                 return obj;
             });
         }
-const CACHE_KEY = 'dashboard_cache_v2';
+        const CACHE_KEY = 'dashboard_cache_v2';
         const IDB_NAME = 'dashboard_db';
         const IDB_STORE = 'cache';
         function idbOpen() {
@@ -611,30 +626,35 @@ const CACHE_KEY = 'dashboard_cache_v2';
                 return true;
             } catch (e) { return false; }
         }
-        async function loadFromGoogleSheets() {
+async function loadFromGoogleSheets() {
             const isFirstLoad = STATE.data.ventas.length === 0;
             setSyncStatus('loading');
-            try {
-                const [ventas, devoCardif, devoMapfre, devoColmena] = await Promise.all([
-                    fetchSheetAsJson(SHEET_GIDS.ventas),
-                    fetchSheetAsJson(SHEET_GIDS.devoCardif),
-                    fetchSheetAsJson(SHEET_GIDS.devoMapfre),
-                    fetchSheetAsJson(SHEET_GIDS.devoColmena)
-                ]);
-                STATE.raw.ventas = ventas;
-                STATE.raw.devoCardif = devoCardif;
-                STATE.raw.devoMapfre = devoMapfre;
-                STATE.raw.devoColmena = devoColmena;
-                STATE.lastSync = new Date();
-                processData();
-                renderAll();
-                saveCache();
-                setSyncStatus('ok');
-            } catch (err) {
-                console.error(err);
+            const keys = ['ventas', 'devoCardif', 'devoMapfre', 'devoColmena'];
+            const results = await Promise.allSettled([
+                fetchSheetAsJson(SHEET_GIDS.ventas),
+                fetchSheetAsJson(SHEET_GIDS.devoCardif),
+                fetchSheetAsJson(SHEET_GIDS.devoMapfre),
+                fetchSheetAsJson(SHEET_GIDS.devoColmena)
+            ]);
+            let anyFailed = false;
+            results.forEach((r, i) => {
+                if (r.status === 'fulfilled') {
+                    STATE.raw[keys[i]] = r.value;
+                } else {
+                    anyFailed = true;
+                    console.error('Fallo al leer ' + keys[i] + ':', r.reason);
+                }
+            });
+            if (results.every(r => r.status === 'rejected')) {
                 if (isFirstLoad) renderAll();
                 setSyncStatus('error');
+                return;
             }
+            STATE.lastSync = new Date();
+            processData();
+            renderAll();
+            saveCache();
+            setSyncStatus(anyFailed ? 'partial' : 'ok');
         }
         function setSyncStatus(status, message) {
             STATE.syncStatus = { status, message };
@@ -1116,6 +1136,7 @@ const CACHE_KEY = 'dashboard_cache_v2';
                 },
                 scales: {
                     x: {
+                        offset: true,
                         title: { display: false },
                         grid: { display: false },
                         ticks: {
@@ -2980,8 +3001,11 @@ function renderRegionales() {
             <div class="panel">
                 <div class="panel-header"><div class="panel-title"><i class="fas fa-cloud"></i>Estado de conexión</div></div>
                 <div id="syncStatusBar"></div>
-                <div style="margin-top:12px">
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                     <button class="btn btn-primary" id="btnSyncNow"><i class="fas fa-sync-alt"></i>Actualizar ahora</button>
+                    <button class="btn" id="btnHardReset" title="Borra el caché local y descarga todo de nuevo"><i class="fas fa-trash-restore"></i>Sincronizar datos</button>
+                </div>
+                <p style="font-size:10px;color:var(--text-3);margin-top:8px">Los datos cuentan la historia; el análisis transforma la información en conocimiento para tomar mejores decisiones.</p>
                 </div>
                 <div class="status-bar" id="statusBar"></div>
             </div>
@@ -3021,6 +3045,22 @@ function renderRegionales() {
             `;
             document.getElementById('btnSyncNow').addEventListener('click', loadFromGoogleSheets);
             document.getElementById('btnPanelRefresh').addEventListener('click', loadFromGoogleSheets);
+            document.getElementById('btnHardReset').addEventListener('click', async () => {
+                if (!confirm('Esto borra el caché local y vuelve a descargar todo desde Google Sheets. ¿Continuar?')) return;
+                try {
+                    const db = await idbOpen();
+                    await new Promise((res, rej) => {
+                        const tx = db.transaction(IDB_STORE, 'readwrite');
+                        tx.objectStore(IDB_STORE).delete(CACHE_KEY);
+                        tx.oncomplete = res;
+                        tx.onerror = rej;
+                    });
+                } catch (e) { console.error(e); }
+                STATE.data = { ventas: [], devoluciones: [] };
+                STATE.lastSync = null;
+                await loadFromGoogleSheets();
+                alert('Filas recibidas ahora mismo — Ventas: ' + STATE.data.ventas.length + ', Devoluciones: ' + STATE.data.devoluciones.length + '. Compara este número con el de tu hoja de Google (fila count) para confirmar si ya está trayendo lo último.');
+            });
             renderSyncStatus(document.getElementById('syncStatusBar'));
             document.getElementById('btnClear').addEventListener('click', () => {
                 STATE.filters = { aseg: '', year: '', month: '' };
@@ -3048,6 +3088,7 @@ function renderRegionales() {
                 idle: { cls: 'warn', icon: 'clock', text: 'Preparando información' },
                 loading: { cls: 'warn', icon: 'spinner fa-spin', text: 'Actualizando información...' },
                 ok: { cls: 'ok', icon: 'check-circle', text: 'Información actualizada' },
+                partial: { cls: 'warn', icon: 'exclamation-triangle', text: 'Actualización parcial (revisa la consola, F12)' },
                 error: { cls: 'err', icon: 'exclamation-circle', text: 'No se pudo actualizar la información' }
             };
             const info = map[s.status] || map.idle;
@@ -3078,17 +3119,17 @@ function renderRegionales() {
             `;
         }
         const PAGE_META = {
-            home: { t: 'Resumen Ejecutivo', s: '¿Cómo va el negocio?' },
-            operacion: { t: 'Operación', s: 'Vista global por banca, canal, sexo y tipo' },
-            ventas: { t: 'Ventas', s: '¿Cómo estamos vendiendo?' },
-            devoluciones: { t: 'Devoluciones', s: '¿Qué se cancela y por qué?' },
-            comisiones: { t: 'Comisiones', s: '¿Cuánto generamos y cuánto perdemos?' },
-            aseguradoras: { t: 'Aseguradoras', s: '¿Cuál aporta más valor y cuál presenta mayor riesgo?' },
-            productos: { t: 'Productos', s: '¿Qué productos generan ingresos, cuáles caen y cuáles cancelan más?' },
-            oficinas: { t: 'Oficinas', s: '¿Qué oficinas destacan y cuáles requieren intervención?' },
-            regionales: { t: 'Regionales', s: '¿Qué Regional está creciendo, cuál está cayendo y por qué?' },
-            tendencias: { t: 'Tendencias', s: '¿Hacia dónde se dirige el negocio?' },
-            config: { t: 'Configuración', s: 'Carga de datos y preferencias' }
+            home: { t: 'Resumen Ejecutivo', s: '¿Cómo está el negocio hoy?' },
+            operacion: { t: 'Operación', s: '¿Dónde se generan los resultados?' },
+            ventas: { t: 'Ventas', s: '¿Qué estamos vendiendo y por dónde?' },
+            devoluciones: { t: 'Devoluciones', s: '¿Qué estamos perdiendo y cuál es su impacto?' },
+            comisiones: { t: 'Comisiones', s: '¿Qué rentabilidad generan las comisiones?' },
+            aseguradoras: { t: 'Aseguradoras', s: '¿Quién genera más valor?' },
+            productos: { t: 'Productos', s: '¿Qué productos impulsan el desempeño?' },
+            oficinas: { t: 'Oficinas', s: '¿Qué oficinas lideran y cuáles requieren atención?' },
+            regionales: { t: 'Regionales', s: '¿Cómo se compara el desempeño regional?' },
+            tendencias: { t: 'Tendencias', s: '¿Cómo evolucionan los principales indicadores?' },
+            config: { t: 'Configuración', s: 'Administración de datos' }
         };
         function navigateTo(page) {
             document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
@@ -3247,10 +3288,20 @@ document.querySelectorAll('.nav-item[data-tooltip]').forEach(item => {
         document.getElementById('sidebarTooltip').style.display = 'none';
     });
 });
-(async () => {
-            await loadCache();
-            renderAll();
-            loadFromGoogleSheets();
+function hideLoadingOverlay() {
+            const ov = document.getElementById('appLoadingOverlay');
+            if (ov) ov.classList.add('hidden');
+        }
+        (async () => {
+            const hadCache = await loadCache();
+            if (hadCache) {
+                renderAll();
+                hideLoadingOverlay();
+                loadFromGoogleSheets();
+            } else {
+                await loadFromGoogleSheets();
+                hideLoadingOverlay();
+            }
             setInterval(loadFromGoogleSheets, AUTO_REFRESH_MINUTES * 60 * 1000);
         })();
     </script>
