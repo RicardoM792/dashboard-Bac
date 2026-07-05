@@ -1355,15 +1355,14 @@ const CACHE_KEY = 'dashboard_cache_v2';
                 ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
                 ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
             </div>
-            <div class="grid-2">
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Tendencia mensual de ventas netas</div></div>
-                    <div class="chart-wrap"><canvas id="ch-home-trend"></canvas></div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Participación por Aseguradora</div></div>
-                    <div class="chart-wrap sm"><canvas id="ch-home-aseg"></canvas></div>
-                </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Tendencia mensual de ventas netas</div></div>
+                <div class="chart-wrap lg"><canvas id="ch-home-trend"></canvas></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Participación por Aseguradora</div></div>
+                <div class="chart-wrap sm"><canvas id="ch-home-aseg"></canvas></div>
+            </div>
             </div>
             <div class="panel">
                 <div class="panel-header">
@@ -2100,7 +2099,6 @@ const CACHE_KEY = 'dashboard_cache_v2';
                 ${kpiCard('Retorno Total', fmtMoney(m.retorno), dCompareCom.retorno, compData.compareLabel, 'money-check-alt', 'success')}
                 ${kpiCard('Rentabilidad', fmtPct(m.totalVentas > 0 ? (m.retorno / m.totalVentas) * 100 : 0), dCompareCom.rent, compData.compareLabel, 'chart-pie', m.retorno > 0 ? 'success' : 'danger')}
             </div>
-            <div class="grid-2">
                 <div class="panel">
                     <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Evolución mensual de comisiones</div></div>
                     <div class="chart-wrap"><canvas id="ch-c-trend"></canvas></div>
@@ -2861,7 +2859,6 @@ function renderRegionales() {
                 <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-area"></i>Evolución histórica</div></div>
                 <div class="chart-wrap lg"><canvas id="ch-t-hist"></canvas></div>
             </div>
-            <div class="grid-2">
                 <div class="panel">
                     <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Ventas netas acumuladas</div></div>
                     <div class="chart-wrap"><canvas id="ch-t-acc"></canvas></div>
