@@ -1,0 +1,3260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executive Commercial Dashboard · Banco Agrario</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{--bg-0:#f8faf9;--bg-1:#ffffff;--bg-2:#f0f4f1;--bg-3:#e1e9e3;--border:#e1e9e3;--text-0:#0f1a13;--text-1:#33413a;--text-2:#64766c;--text-3:#94a69b;--verde-claro:#a5d6a7;--verde-medio:#66bb6a;--verde-intenso:#388e3c;--verde-bosque:#2e7d32;--verde-petroleo:#1b5e20;--rojo:#d32f2f;--rojo-claro:#ef5350;--shadow:0 1px 3px 0 rgba(0,0,0,.08),0 1px 2px 0 rgba(0,0,0,.04);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04)}
+[data-theme="dark"]{--bg-0:#0a120d;--bg-1:#111c15;--bg-2:#1a2820;--bg-3:#243629;--border:#2a3d30;--text-0:#f4f9f5;--text-1:#cbd8ce;--text-2:#94a69b;--text-3:#647266;--verde-claro:#4ade80;--verde-medio:#22c55e;--verde-intenso:#16a34a;--verde-bosque:#15803d;--verde-petroleo:#166534;--rojo:#ef4444;--rojo-claro:#f87171;--shadow:0 4px 6px -1px rgba(0,0,0,.3),0 2px 4px -1px rgba(0,0,0,.2);--shadow-lg:0 10px 25px -5px rgba(0,0,0,.4)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg-0);color:var(--text-0);min-height:100vh;overflow-x:hidden;font-size:14px;transition:background .3s,color .3s}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;transition:grid-template-columns .3s;position:relative}
+.app.sidebar-collapsed{grid-template-columns:60px 1fr}
+.sidebar{background:var(--bg-1);border-right:1px solid var(--border);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;transition:all .3s;width:260px;display:flex;flex-direction:column;z-index:200}
+.app.sidebar-collapsed .sidebar{width:60px}
+.brand{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.app.sidebar-collapsed .brand{padding:16px 10px}
+.brand h1{font-size:15px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--verde-petroleo)}
+.brand h1 i{color:var(--verde-intenso);font-size:18px;flex-shrink:0}
+.app.sidebar-collapsed .brand h1{justify-content:center}
+.app.sidebar-collapsed .brand h1 span{display:none}
+.brand-sub{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;white-space:nowrap;font-weight:500}
+.app.sidebar-collapsed .brand-sub{visibility:hidden}
+.brand-title{font-size:10px;color:var(--text-2);font-style:italic;margin-top:4px;white-space:nowrap;font-weight:400}
+.app.sidebar-collapsed .brand-title{visibility:hidden}
+.sidebar nav{padding-top:14px;display:block}
+.nav-section{padding:0 12px;margin-bottom:8px;flex:1}
+.app.sidebar-collapsed .nav-section{padding:0 6px}
+.nav-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;padding:12px 12px 8px;font-weight:600;white-space:nowrap}
+.app.sidebar-collapsed .nav-label{visibility:hidden}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;margin:2px 0;border-radius:8px;cursor:pointer;color:var(--text-2);font-size:13px;font-weight:500;transition:all .2s ease;white-space:nowrap;position:relative}
+.app.sidebar-collapsed .nav-item{justify-content:center;padding:10px 14px;gap:12px}
+.nav-item:hover{background:var(--bg-2);color:var(--text-0)}
+.nav-item.active{background:rgba(56,142,60,.1);color:var(--verde-bosque);border-left:3px solid var(--verde-intenso);padding-left:11px}
+.app.sidebar-collapsed .nav-item.active{border-left:none;padding-left:14px}
+.nav-item i{width:18px;text-align:center;font-size:14px;flex-shrink:0}
+.app.sidebar-collapsed .nav-item i{margin:0}
+.nav-item span.label-text{flex:1}
+.nav-item.theme-active{color:var(--verde-bosque)}
+.nav-item.theme-active i{color:var(--verde-bosque)}
+.app.sidebar-collapsed .nav-item span.label-text{display:none}
+.sidebar-tooltip{position:fixed;background:var(--bg-1);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:11px;white-space:nowrap;z-index:2000;box-shadow:var(--shadow-lg);color:var(--text-0);font-weight:500;pointer-events:none;display:none}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:150}
+.main{padding:0;min-width:0;transition:all .3s}
+.topbar{background:var(--bg-1);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;transition:all .3s;flex-wrap:wrap}
+.page-title{font-size:16px;font-weight:700;flex:1;min-width:200px;color:var(--verde-bosque)}
+.page-title small{display:block;font-size:10px;color:var(--text-3);font-weight:400;margin-top:2px}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:2px}
+.filter-group label{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.filter-group select{background:var(--bg-2);color:var(--text-0);border:1px solid var(--border);border-radius:6px;padding:6px 28px 6px 10px;font-size:12px;font-weight:500;cursor:pointer;min-width:110px;appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a69b' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.filter-group select:hover{border-color:var(--verde-intenso)}
+.filter-group select:focus{outline:none;border-color:var(--verde-intenso);box-shadow:0 0 0 2px rgba(56,142,60,.2)}
+.btn{background:var(--bg-2);color:var(--text-0);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.btn:hover{background:var(--bg-3);border-color:var(--verde-intenso)}
+.btn-sm{padding:5px 8px;font-size:11px}
+.btn-icon{padding:6px 8px}
+.btn-primary{background:var(--verde-intenso);border-color:var(--verde-intenso);color:#fff}
+.btn-primary:hover{background:var(--verde-bosque)}
+.btn-toggle-sidebar{background:var(--bg-2);color:var(--text-0);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-toggle-sidebar:hover{background:var(--bg-3);border-color:var(--verde-intenso)}
+.content{padding:20px 24px}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+@media(min-width:1600px){.kpi-grid{grid-template-columns:repeat(4,1fr)}.chart-wrap{height:380px}.chart-wrap.lg{height:460px}}
+.kpi-card{background:var(--bg-1);border:1px solid var(--border);border-radius:12px;padding:12px 14px;position:relative;overflow:hidden;transition:all .25s;box-shadow:var(--shadow)}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--verde-medio)}
+.kpi-label{font-size:9px;color:var(--text-2);text-transform:uppercase;letter-spacing:1.1px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.kpi-label i{font-size:11px;color:var(--verde-intenso)}
+.kpi-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.kpi-value{font-size:18px;font-weight:700;letter-spacing:-.4px;color:var(--text-0);font-variant-numeric:tabular-nums}
+.kpi-delta{font-size:10px;font-weight:700;white-space:nowrap}
+.kpi-delta.up{color:var(--verde-intenso)}
+.kpi-delta.down{color:var(--rojo)}
+.kpi-delta.flat{color:var(--text-3)}
+.kpi-sub{color:var(--text-3);font-size:9px;font-weight:500;margin-top:4px}
+.panel{background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;transition:all .3s;min-width:0}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.panel-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.panel-title i{color:var(--verde-bosque);font-size:14px}
+.panel-title small{color:var(--text-3);font-weight:400;margin-left:6px;font-size:11px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid-2>*,.grid-3>*,.grid-4>*{min-width:0}
+@media(max-width:1200px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media(max-width:1024px){table.data th,table.data td{font-size:9px;padding:7px 8px}}
+.chart-wrap{position:relative;height:320px;width:100%;overflow:hidden;min-width:0}
+.chart-wrap canvas{max-width:100%!important}
+.chart-wrap.sm{height:240px}
+.chart-wrap.lg{height:420px}
+.chart-wrap.scroll-x{overflow-x:auto;overflow-y:hidden}
+.chart-wrap.scroll-x canvas{max-width:none!important;width:auto}
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);max-width:100%}
+table.data{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+table.data thead{background:var(--bg-2)}
+table.data th{padding:10px 12px;text-align:center;font-weight:600;color:var(--text-2);font-size:10px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.data th:first-child{text-align:left}
+table.data td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-1);text-align:center;vertical-align:middle}
+table.data td:first-child{text-align:left}
+table.data tbody tr{transition:background .15s}
+table.data tbody tr:hover{background:var(--bg-2);cursor:pointer}
+table.data tbody tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.pct{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.tag.up{background:rgba(56,142,60,.15);color:var(--verde-intenso)}
+.tag.down{background:rgba(211,47,47,.15);color:var(--rojo)}
+.tag.flat{background:rgba(148,163,184,.15);color:var(--text-2)}
+.tag.ok{background:rgba(56,142,60,.15);color:var(--verde-intenso)}
+.tag.warn{background:rgba(217,119,6,.15);color:var(--warning,#d97706)}
+.tag.bad{background:rgba(211,47,47,.15);color:var(--rojo)}
+.clickable{cursor:pointer}
+.clickable:hover td{color:var(--verde-bosque)}
+.breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;flex-wrap:wrap}
+.breadcrumb span{color:var(--text-3);cursor:pointer;padding:4px 10px;border-radius:6px;transition:all .15s}
+.breadcrumb span:hover{background:var(--bg-2);color:var(--text-0)}
+.breadcrumb span.current{color:var(--verde-bosque);background:rgba(56,142,60,.1);font-weight:600;cursor:default}
+.breadcrumb i{color:var(--text-3);font-size:10px}
+.insight-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.insight{display:flex;gap:10px;padding:10px 14px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.5;border-left:3px solid var(--verde-intenso)}
+.insight.success{border-left-color:var(--verde-medio)}
+.insight.danger{border-left-color:var(--rojo)}
+.insight.warning{border-left-color:#43a047}
+.insight.info{border-left-color:#81c784}
+.insight i{color:var(--verde-bosque);margin-top:2px;flex-shrink:0}
+.insight.success i{color:var(--verde-medio)}
+.insight.danger i{color:var(--rojo)}
+.insight.warning i{color:#43a047}
+.insight.info i{color:#81c784}
+.insight strong{color:var(--text-0);font-weight:600}
+.status-bar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.status-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border);padding:6px 12px;border-radius:20px;font-size:11px;font-weight:500}
+.status-chip.ok i{color:var(--verde-medio)}
+.status-chip.warn i{color:#d97706}
+.status-chip.err i{color:var(--rojo)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--verde-intenso)}
+.empty{text-align:center;padding:60px 20px;color:var(--text-3)}
+.empty i{font-size:50px;margin-bottom:16px;color:var(--bg-3)}
+.empty h3{font-size:16px;color:var(--text-1);margin-bottom:6px}
+.empty p{font-size:12px}
+.heatmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.heat-cell{padding:16px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border);cursor:pointer;transition:all .2s;text-align:center}
+.heat-cell:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.heat-cell .name{font-size:13px;color:var(--text-1);margin-bottom:6px;font-weight:700}
+.heat-cell .val{font-size:18px;font-weight:700}
+.heat-cell .sub{font-size:11px;color:var(--text-2);margin-top:3px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab{padding:8px 16px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--text-0)}
+.tab.active{color:var(--verde-bosque);border-bottom-color:var(--verde-intenso)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.theme-switch{display:flex;gap:12px;margin-top:14px}
+.theme-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);cursor:pointer;color:var(--text-2);font-size:12px;font-weight:600;transition:all .2s}
+.theme-btn i{font-size:22px}
+.theme-btn:hover{border-color:var(--verde-intenso);color:var(--text-0)}
+.theme-btn.active{border-color:var(--verde-intenso);background:rgba(56,142,60,.1);color:var(--verde-bosque)}
+.theme-btn.active i{color:var(--verde-bosque)}
+.drill-detail{background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px}
+.drill-detail h4{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--verde-bosque)}
+.detalle-bloques{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px}
+.bloque-aseguradora{background:var(--bg-1);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:4px solid var(--verde-intenso)}
+.bloque-aseguradora h3{color:var(--verde-bosque);margin-bottom:12px;text-align:center;font-size:14px;font-weight:700}
+@media(max-width:768px){
+    .app{grid-template-columns:1fr}
+    .app.sidebar-open .sidebar-overlay{display:block}
+    .sidebar{position:fixed;left:0;top:0;z-index:1000;transform:translateX(-100%)}
+    .app.sidebar-open .sidebar{transform:translateX(0)}
+    .app.sidebar-collapsed{grid-template-columns:1fr}
+    .topbar{padding:10px 16px}
+    .content{padding:16px}
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .chart-wrap{height:280px}
+    .chart-wrap.lg{height:350px}
+    .chart-wrap canvas{max-width:100%}
+    .chart-wrap .chartjs-size-monitor{display:none}
+    table.data th,table.data td{font-size:8px;padding:6px 6px}
+}
+</style>
+</head>
+<body data-theme="light">
+    <div class="app" id="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>
+                    <i class="fas fa-seedling"></i>
+                    <span>Banco Agrario</span>
+                </h1>
+                <div class="brand-sub">Data & Business Analytics</div>
+                <div class="brand-title">Executive Commercial Dashboard</div>
+            </div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-label">Principal</div>
+                    <div class="nav-item active" data-page="home" data-tooltip="Resumen Ejecutivo">
+                        <i class="fas fa-home"></i>
+                        <span class="label-text">Resumen Ejecutivo</span>
+                    </div>
+                    <div class="nav-item" data-page="operacion" data-tooltip="Operación">
+                        <i class="fas fa-globe"></i>
+                        <span class="label-text">Operación</span>
+                    </div>
+                    <div class="nav-item" data-page="ventas" data-tooltip="Ventas">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span class="label-text">Ventas</span>
+                    </div>
+                    <div class="nav-item" data-page="devoluciones" data-tooltip="Devoluciones">
+                        <i class="fas fa-undo"></i>
+                        <span class="label-text">Devoluciones</span>
+                    </div>
+                    <div class="nav-item" data-page="comisiones" data-tooltip="Comisiones">
+                        <i class="fas fa-coins"></i>
+                        <span class="label-text">Comisiones</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Análisis</div>
+                    <div class="nav-item" data-page="aseguradoras" data-tooltip="Aseguradoras">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="label-text">Aseguradoras</span>
+                    </div>
+                    <div class="nav-item" data-page="productos" data-tooltip="Productos">
+                        <i class="fas fa-box"></i>
+                        <span class="label-text">Productos</span>
+                    </div>
+                    <div class="nav-item" data-page="oficinas" data-tooltip="Oficinas">
+                        <i class="fas fa-building"></i>
+                        <span class="label-text">Oficinas</span>
+                    </div>
+                    <div class="nav-item" data-page="regionales" data-tooltip="Regionales">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span class="label-text">Regionales</span>
+                    </div>
+                    <div class="nav-item" data-page="tendencias" data-tooltip="Tendencias">
+                        <i class="fas fa-chart-area"></i>
+                        <span class="label-text">Tendencias</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Apariencia</div>
+                    <div class="nav-item theme-active" id="navThemeLight" data-tooltip="Claro">
+                        <i class="fas fa-sun"></i>
+                        <span class="label-text">Claro</span>
+                    </div>
+                    <div class="nav-item" id="navThemeDark" data-tooltip="Oscuro">
+                        <i class="fas fa-moon"></i>
+                        <span class="label-text">Oscuro</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Gestión de datos</div>
+                    <div class="nav-item" id="navRefreshData" data-tooltip="Actualizar datos">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="label-text">Actualizar datos</span>
+                    </div>
+                    <div class="nav-item" id="navClearData" data-tooltip="Limpiar filtros">
+                        <i class="fas fa-eraser"></i>
+                        <span class="label-text">Limpiar filtros</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Sistema</div>
+                    <div class="nav-item" data-page="config" data-tooltip="Configuración">
+                        <i class="fas fa-cog"></i>
+                        <span class="label-text">Configuración</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <div class="sidebar-tooltip" id="sidebarTooltip"></div>
+        <input type="file" id="globalRefreshInput" accept=".xlsx,.xls" style="display:none">
+        <main class="main">
+            <div class="topbar">
+                <button class="btn-toggle-sidebar" id="btnToggleSidebar" title="Contraer/Expandir">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title" id="pageTitle">
+                    Resumen Ejecutivo
+                    <small id="pageSubtitle">¿Cómo va el negocio?</small>
+                </div>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Aseguradora</label>
+                        <select id="fAseg">
+                            <option value="">Todas</option>
+                            <option>CARDIF</option>
+                            <option>MAPFRE</option>
+                            <option>COLMENA</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Año</label>
+                        <select id="fYear">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Mes</label>
+                        <select id="fMonth">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm btn-icon" id="btnClearFilters" title="Limpiar filtros">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="page active" id="page-home"></div>
+                <div class="page" id="page-operacion"></div>
+                <div class="page" id="page-ventas"></div>
+                <div class="page" id="page-devoluciones"></div>
+                <div class="page" id="page-comisiones"></div>
+                <div class="page" id="page-aseguradoras"></div>
+                <div class="page" id="page-productos"></div>
+                <div class="page" id="page-oficinas"></div>
+                <div class="page" id="page-regionales"></div>
+                <div class="page" id="page-tendencias"></div>
+                <div class="page" id="page-config"></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        Chart.register(ChartDataLabels);
+        const STATE = {
+            raw: { ventas: [], devoCardif: [], devoMapfre: [], devoColmena: [] },
+            data: { ventas: [], devoluciones: [] },
+            filters: { aseg: '', year: '', month: '' },
+            drill: { regional: null, zonal: null, oficina: null },
+            devoDrill: null,
+            monthsByYear: {},
+            charts: {},
+            theme: 'light',
+            sidebarCollapsed: false,
+            syncStatus: { status: 'idle' },
+            lastSync: null
+        };
+        const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const GOOGLE_SHEET_ID = '1njXqvvbMslkFNpkVjlaOAfRx_ZsOw__7';
+        const SHEET_GIDS = {
+            ventas: '1062291957',
+            devoCardif: '1249242649',
+            devoMapfre: '2053644164',
+            devoColmena: '2144968008'
+        };
+        const AUTO_REFRESH_MINUTES = 10;
+        const COLORS = {
+            verdeClaro: '#a5d6a7',
+            verdeMedio: '#66bb6a',
+            verdeIntenso: '#388e3c',
+            verdeBosque: '#2e7d32',
+            verdePetroleo: '#1b5e20',
+            verdeNeta: '#00c853',
+            rojo: '#d32f2f',
+            rojoClaro: '#ef5350'
+        };
+        const COMPARE_LABELS = {
+            'vs mes anterior': 'variación mensual',
+            'vs año ant. mismo mes': 'vs mismo mes anterior',
+            'vs año ant.': 'vs año anterior',
+            'vs todos los períodos': 'base histórica'
+        };
+        const greenGradient = (n) => {
+            const palette = ['#1b5e20', '#2e7d32', '#388e3c', '#4caf50', '#66bb6a', '#81c784', '#a5d6a7', '#c8e6c9', '#e8f5e9'];
+            if (n <= 1) return [palette[0]];
+            const out = [];
+            const step = (palette.length - 1) / Math.max(n - 1, 1);
+            for (let i = 0; i < n; i++) {
+                out.push(palette[Math.round(i * step)]);
+            }
+            return out;
+        };
+        const redGradient = (n) => {
+            const palette = ['#b71c1c', '#c62828', '#d32f2f', '#e53935', '#ef5350', '#e57373', '#ef9a9a', '#ffcdd2', '#ffebee'];
+            if (n <= 1) return [palette[0]];
+            const out = [];
+            const step = (palette.length - 1) / Math.max(n - 1, 1);
+            for (let i = 0; i < n; i++) {
+                out.push(palette[Math.round(i * step)]);
+            }
+            return out;
+        };
+        const safeNum = v => {
+            if (v == null || v === '' || isNaN(v)) return 0;
+            const n = Number(v);
+            return isFinite(n) ? n : 0;
+        };
+        const fmtMoney = v => {
+            const n = safeNum(v);
+            if (n === 0) return '$0';
+            const abs = Math.abs(n);
+            if (abs >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+            if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+            if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+        };
+        const fmtVal = v => {
+            const n = safeNum(v);
+            if (n === 0) return '0';
+            const abs = Math.abs(n);
+            if (abs >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+            if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (abs >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+        };
+        const fmtNum = v => {
+            const n = safeNum(v);
+            return n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+        };
+        const fmtPct = v => {
+            const n = safeNum(v);
+            return n.toFixed(1) + '%';
+        };
+        const wrapLabel = label => {
+            if (!label || label.length <= 10) return label;
+            const words = label.split(' ');
+            if (words.length < 2) return label;
+            const mid = Math.ceil(label.length / 2);
+            let line1 = '', line2 = '', acc = 0;
+            for (const w of words) {
+                if (acc < mid) line1 += (line1 ? ' ' : '') + w;
+                else line2 += (line2 ? ' ' : '') + w;
+                acc += w.length + 1;
+            }
+            return line2 ? [line1, line2] : label;
+        };
+        const isNumericLabel = s => /^\d+([.,]\d+)?$/.test(String(s || '').trim());
+        const normCode = v => {
+            if (v == null) return '';
+            let s = String(v).trim();
+            if (/^\d+\.0+$/.test(s)) s = s.replace(/\.0+$/, '');
+            return s;
+        };
+        const isFutureDate = fecha => fecha.getTime() > Date.now();
+        const parseExcelDate = v => {
+            if (v == null || v === '') return null;
+            if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+            if (typeof v === 'number') {
+                if (v < 1 || v > 100000) return null;
+                try {
+                    const d = XLSX.SSF.parse_date_code(v);
+                    if (d && d.y >= 1900 && d.y <= 2100) return new Date(d.y, d.m - 1, d.d);
+                } catch (e) { }
+                return null;
+            }
+            const s = String(v).trim();
+            if (!s) return null;
+            const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            if (iso) {
+                const y = +iso[1],
+                    m = +iso[2],
+                    d = +iso[3];
+                if (y >= 2000 && y <= 2100) return new Date(y, m - 1, d);
+            }
+            const lat = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            if (lat) {
+                const a = +lat[1], b = +lat[2];
+                let year = +lat[3], day, mon;
+                if (a > 12 && b <= 12) { day = a; mon = b; }
+                else if (b > 12 && a <= 12) { day = b; mon = a; }
+                else { mon = a; day = b; }
+                if (year < 100) year += 2000;
+                if (year >= 2000 && year <= 2100 && mon >= 1 && mon <= 12) return new Date(year, mon - 1, day);
+            }
+            const alt = s.match(/^(\d{1,2})\s+de\s+([a-zñ]+)\s+de\s+(\d{2,4})/i);
+            if (alt) {
+                const meses = { 'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5, 'julio': 6, 'agosto': 7,
+                    'septiembre': 8, 'setiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11 };
+                const mon = meses[alt[2].toLowerCase()];
+                if (mon !== undefined) {
+                    let year = +alt[3];
+                    if (year < 100) year += 2000;
+                    if (year >= 2000 && year <= 2100) return new Date(year, mon, +alt[1]);
+                }
+            }
+            return null;
+        };
+        const normAseg = v => {
+            if (!v) return '';
+            const s = String(v).toUpperCase().trim();
+            if (s.includes('COLMENA')) return 'COLMENA';
+            if (s.includes('CARDIF')) return 'CARDIF';
+            if (s.includes('MAPFRE')) return 'MAPFRE';
+            return s;
+        };
+        const normStr = v => v == null ? '' : String(v).trim();
+        const toNum = v => {
+            if (v == null || v === '') return 0;
+            if (typeof v === 'number') return isFinite(v) ? v : 0;
+            const s = String(v).replace(/[^\d.-]/g, '');
+            if (!s) return 0;
+            const n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
+        };
+        const sumBy = (arr, key) => arr.reduce((a, b) => a + toNum(b[key]), 0);
+        const groupBy = (arr, key) => arr.reduce((a, b) => {
+            const k = typeof key === 'function' ? key(b) : normStr(b[key]);
+            (a[k] = a[k] || []).push(b);
+            return a;
+        }, {});
+        const ymKey = (y, m) => y + '-' + String(m + 1).padStart(2, '0');
+        const ymLabel = k => {
+            const parts = k.split('-');
+            const y = +parts[0],
+                m = +parts[1] - 1;
+            return MONTHS[m] + " '" + String(y).slice(2);
+        };
+        const groupByYM = arr => arr.reduce((a, b) => {
+            if (b.year == null || b.month == null) return a;
+            const k = ymKey(b.year, b.month);
+            (a[k] = a[k] || []).push(b);
+            return a;
+        }, {});
+        const sortedYM = obj => Object.keys(obj).sort();
+        const sheetCsvUrl = gid => `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}`;
+        function parseCsv(text) {
+            const rows = [];
+            let row = [], field = '', inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; }
+                        else inQuotes = false;
+                    } else field += c;
+                } else if (c === '"') inQuotes = true;
+                else if (c === ',') { row.push(field); field = ''; }
+                else if (c === '\n' || c === '\r') {
+                    if (c === '\r' && text[i + 1] === '\n') i++;
+                    row.push(field); field = '';
+                    if (row.length > 1 || row[0] !== '') rows.push(row);
+                    row = [];
+                } else field += c;
+            }
+            if (field !== '' || row.length) { row.push(field); rows.push(row); }
+            return rows;
+        }
+        async function fetchSheetAsJson(gid) {
+            const res = await fetch(sheetCsvUrl(gid));
+            if (!res.ok) throw new Error('No se pudo leer la hoja (gid ' + gid + ')');
+            const csvText = await res.text();
+            const rows = parseCsv(csvText);
+            if (rows.length < 2) return [];
+            const headers = rows[0].map(h => h.trim());
+            return rows.slice(1).map(row => {
+                const obj = {};
+                headers.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });
+                return obj;
+            });
+        }
+const CACHE_KEY = 'dashboard_cache_v2';
+        const IDB_NAME = 'dashboard_db';
+        const IDB_STORE = 'cache';
+        function idbOpen() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(IDB_NAME, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function idbSet(key, value) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(IDB_STORE, 'readwrite');
+                tx.objectStore(IDB_STORE).put(value, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        async function idbGet(key) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(IDB_STORE, 'readonly');
+                const req = tx.objectStore(IDB_STORE).get(key);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function saveCache() {
+            try {
+                await idbSet(CACHE_KEY, { data: STATE.data, ts: Date.now() });
+            } catch (e) { }
+        }
+        async function loadCache() {
+            try {
+                const payload = await idbGet(CACHE_KEY);
+                if (!payload || !payload.data) return false;
+                STATE.data.ventas = (payload.data.ventas || []).map(v => ({ ...v, fecha: v.fecha ? new Date(v.fecha) : null }));
+                STATE.data.devoluciones = (payload.data.devoluciones || []).map(v => ({ ...v, fecha: v.fecha ? new Date(v.fecha) : null }));
+                STATE.prodNombreIdx = new Map();
+                STATE.ofiNombreIdx = new Map();
+                STATE.data.ventas.forEach(v => {
+                    if (v.codProducto && !STATE.prodNombreIdx.has(v.codProducto)) STATE.prodNombreIdx.set(v.codProducto, v.nombreProducto);
+                    if (v.codOficina && !STATE.ofiNombreIdx.has(v.codOficina)) STATE.ofiNombreIdx.set(v.codOficina, v.nombreOficina);
+                });
+                STATE.lastSync = new Date(payload.ts);
+                updateFilterOptions();
+                return true;
+            } catch (e) { return false; }
+        }
+        async function loadFromGoogleSheets() {
+            const isFirstLoad = STATE.data.ventas.length === 0;
+            setSyncStatus('loading');
+            try {
+                const [ventas, devoCardif, devoMapfre, devoColmena] = await Promise.all([
+                    fetchSheetAsJson(SHEET_GIDS.ventas),
+                    fetchSheetAsJson(SHEET_GIDS.devoCardif),
+                    fetchSheetAsJson(SHEET_GIDS.devoMapfre),
+                    fetchSheetAsJson(SHEET_GIDS.devoColmena)
+                ]);
+                STATE.raw.ventas = ventas;
+                STATE.raw.devoCardif = devoCardif;
+                STATE.raw.devoMapfre = devoMapfre;
+                STATE.raw.devoColmena = devoColmena;
+                STATE.lastSync = new Date();
+                processData();
+                renderAll();
+                saveCache();
+                setSyncStatus('ok');
+            } catch (err) {
+                console.error(err);
+                if (isFirstLoad) renderAll();
+                setSyncStatus('error');
+            }
+        }
+        function setSyncStatus(status, message) {
+            STATE.syncStatus = { status, message };
+            const bar = document.getElementById('syncStatusBar');
+            if (bar) renderSyncStatus(bar);
+        }
+        function findField(row, keys) {
+            const norm = s => String(s).toLowerCase().trim().replace(/[_\s\/\-]+/g, '').normalize("NFD").replace(
+                /[\u0300-\u036f]/g, "");
+            const normKeys = keys.map(norm);
+            for (const rk of Object.keys(row)) {
+                const nrk = norm(rk);
+                if (normKeys.includes(nrk)) return row[rk];
+            }
+            return null;
+        }
+        function processData() {
+            const ventasRaw = STATE.raw.ventas;
+            const ventas = [];
+            for (const r of ventasRaw) {
+                const fechaVal = findField(r, ['Fecha pago efectivo', 'Fecha_pago_efectivo', 'FechaPagoEfectivo',
+                    'FechaPago'
+                ]);
+                if (fechaVal == null || fechaVal === '') continue;
+                const fecha = parseExcelDate(fechaVal);
+                if (!fecha || isFutureDate(fecha)) continue;
+                const year = fecha.getFullYear();
+                const month = fecha.getMonth();
+                if (year < 2020 || year > 2030) continue;
+                const cert = normStr(findField(r, ['Certificado']));
+                if (!cert) continue;
+                ventas.push({
+                    codProducto: normCode(findField(r, ['Cod_Producto', 'Codigo_Producto', 'Código_Producto'])),
+                    nombreProducto: normStr(findField(r, ['Nombre_Producto', 'NombreProducto'])),
+                    codOficina: normCode(findField(r, ['Codigo_Oficina', 'Código_Oficina'])),
+                    nombreOficina: normStr(findField(r, ['Nombre_de_Oficina', 'NombreOficina', 'Nombre Oficina'])),
+                    regional: normStr(findField(r, ['Regional'])),
+                    zonal: normStr(findField(r, ['Zonal'])),
+                    banca: normStr(findField(r, ['Banca'])),
+                    canal: normStr(findField(r, ['Canal'])),
+                    sexo: normStr(findField(r, ['Sexo_Asegurado', 'SexoAsegurado', 'Sexo'])),
+                    certificado: cert,
+                    primaNeta: toNum(findField(r, ['Prima_Neta', 'PrimaNeta'])),
+                    fecha,
+                    valorRecaudado: toNum(findField(r, ['Valor recaudado', 'Valor_Recaudado', 'ValorRecaudado'])),
+                    aseguradora: normAseg(findField(r, ['Aseguradora'])),
+                    tipo: normStr(findField(r, ['Tipo'])),
+                    comision: toNum(findField(r, ['Comisión_Redondeado', 'Comision_Redondeado',
+                        'ComisionRedondeado'
+                    ])),
+                    ivaComision: toNum(findField(r, ['IVA_Redondeado', 'IVARedondeado'])),
+                    year,
+                    month
+                });
+            }
+            const ventasIdx = new Map();
+            ventas.forEach(v => ventasIdx.set(v.certificado, v));
+            const prodNombreIdx = new Map();
+            ventas.forEach(v => { if (v.codProducto && !prodNombreIdx.has(v.codProducto)) prodNombreIdx.set(v.codProducto, v.nombreProducto); });
+            const ofiNombreIdx = new Map();
+            ventas.forEach(v => { if (v.codOficina && !ofiNombreIdx.has(v.codOficina)) ofiNombreIdx.set(v.codOficina, v.nombreOficina); });
+            STATE.prodNombreIdx = prodNombreIdx;
+            STATE.ofiNombreIdx = ofiNombreIdx;
+            const devo = [];
+            for (const r of STATE.raw.devoCardif) {
+                const cert = normStr(findField(r, ['certificado', 'Certificado']));
+                const venta = ventasIdx.get(cert);
+                const fechaVal = findField(r, ['fecha de transacción', 'fecha de transaccion', 'Fecha de Transaccion',
+                    'FechaTransaccion'
+                ]);
+                const fecha = parseExcelDate(fechaVal);
+                if (!fecha || isFutureDate(fecha)) continue;
+                const year = fecha.getFullYear();
+                const month = fecha.getMonth();
+                if (year < 2020 || year > 2030) continue;
+                devo.push({
+                    aseguradora: 'CARDIF',
+                    certificado: cert,
+                    codProducto: venta ? venta.codProducto : normCode(findField(r, ['Cod_Producto',
+                        'Codigo_Producto', 'Producto (A)'
+                    ])),
+                    producto: venta ? venta.nombreProducto : (prodNombreIdx.get(normCode(findField(r, ['Cod_Producto',
+                        'Codigo_Producto', 'Producto (A)'
+                    ]))) || normStr(findField(r, ['producto', 'Producto', 'Producto (A)']))),
+                    codOficina: venta ? venta.codOficina : normCode(findField(r, ['OFICINA', 'Oficina (D)'])),
+                    oficina: venta ? venta.nombreOficina : (ofiNombreIdx.get(normCode(findField(r, ['OFICINA', 'Oficina (D)']))) || normStr(findField(r, ['OFICINA', 'Oficina (D)', 'Oficina']))),
+                    regional: venta ? venta.regional : normStr(findField(r, ['Regional'])),
+                    zonal: venta ? venta.zonal : normStr(findField(r, ['Zonal'])),
+                    banca: venta ? venta.banca : normStr(findField(r, ['Banca'])),
+                    canal: venta ? venta.canal : normStr(findField(r, ['Canal'])),
+                    aseguradoraVenta: venta ? venta.aseguradora : 'CARDIF',
+                    fecha,
+                    valor: toNum(findField(r, ['Valor Reversion', 'Valor_Reversion', 'ValorReversion'])),
+                    estado: normStr(findField(r, ['Estado de la Transaccion', 'Estado_de_la_Transaccion'])),
+                    comision: toNum(findField(r, ['COMISIÓN REDON', 'COMISION REDON', 'COMISION_REDON',
+                        'comision'
+                    ])),
+                    iva: toNum(findField(r, ['IVA REDON', 'IVA_REDON', 'iva'])),
+                    year,
+                    month
+                });
+            }
+            for (const r of STATE.raw.devoMapfre) {
+                const cert = normStr(findField(r, ['Certificado/Poliza', 'Certificado_Poliza', 'CertificadoPoliza',
+                    'Certificado'
+                ]));
+                const venta = ventasIdx.get(cert);
+                const fechaVal = findField(r, ['Fecha_Devolucion', 'FechaDevolucion']);
+                const fecha = parseExcelDate(fechaVal);
+                if (!fecha || isFutureDate(fecha)) continue;
+                const year = fecha.getFullYear();
+                const month = fecha.getMonth();
+                if (year < 2020 || year > 2030) continue;
+                devo.push({
+                    aseguradora: 'MAPFRE',
+                    certificado: cert,
+                    codProducto: venta ? venta.codProducto : normCode(findField(r, ['Cod_Producto', 'Producto'])),
+                    producto: venta ? venta.nombreProducto : (prodNombreIdx.get(normCode(findField(r, ['Cod_Producto', 'Producto']))) || normStr(findField(r, ['Cod_Producto', 'Producto']))),
+                    codOficina: venta ? venta.codOficina : normCode(findField(r, ['Codigo_Oficina',
+                        'Código_Oficina'
+                    ])),
+                    oficina: venta ? venta.nombreOficina : (ofiNombreIdx.get(normCode(findField(r, ['Codigo_Oficina', 'Código_Oficina']))) || normStr(findField(r, ['Nombre_de_Oficina', 'Oficina']))),
+                    regional: venta ? venta.regional : normStr(findField(r, ['Regional'])),
+                    zonal: venta ? venta.zonal : normStr(findField(r, ['Zonal'])),
+                    banca: venta ? venta.banca : normStr(findField(r, ['Banca'])),
+                    canal: venta ? venta.canal : normStr(findField(r, ['Canal'])),
+                    aseguradoraVenta: venta ? venta.aseguradora : 'MAPFRE',
+                    fecha,
+                    valor: toNum(findField(r, ['Monto_Devolucion', 'MontoDevolucion'])),
+                    estado: normStr(findField(r, ['Estado_Devolucion', 'EstadoDevolucion'])),
+                    comision: toNum(findField(r, ['COMISIÓN REDON', 'COMISION REDON', 'COMISION_REDON',
+                        'COMISIÓN'
+                    ])),
+                    iva: toNum(findField(r, ['IVA REDONDEADO', 'IVA_REDONDEADO', 'IVAREDONDEADO', 'IVA REDON',
+                        'IVA'
+                    ])),
+                    year,
+                    month
+                });
+            }
+            for (const r of STATE.raw.devoColmena) {
+                const cert = normStr(findField(r, ['Certificado/Poliza', 'Certificado_Poliza', 'CertificadoPoliza',
+                    'Certificado'
+                ]));
+                const venta = ventasIdx.get(cert);
+                const fechaVal = findField(r, ['Fecha_Devolucion', 'FechaDevolucion']);
+                const fecha = parseExcelDate(fechaVal);
+                if (!fecha || isFutureDate(fecha)) continue;
+                const year = fecha.getFullYear();
+                const month = fecha.getMonth();
+                if (year < 2020 || year > 2030) continue;
+                devo.push({
+                    aseguradora: 'COLMENA',
+                    certificado: cert,
+                    codProducto: venta ? venta.codProducto : normCode(findField(r, ['Cod_Producto', 'Producto'])),
+                    producto: venta ? venta.nombreProducto : (prodNombreIdx.get(normCode(findField(r, ['Cod_Producto', 'Producto']))) || normStr(findField(r, ['Cod_Producto', 'Producto']))),
+                    codOficina: venta ? venta.codOficina : normCode(findField(r, ['Codigo_Oficina',
+                        'Código_Oficina'
+                    ])),
+                    oficina: venta ? venta.nombreOficina : (ofiNombreIdx.get(normCode(findField(r, ['Codigo_Oficina', 'Código_Oficina']))) || normStr(findField(r, ['Nombre_de_Oficina', 'Oficina']))),
+                    regional: venta ? venta.regional : normStr(findField(r, ['Regional'])),
+                    zonal: venta ? venta.zonal : normStr(findField(r, ['Zonal'])),
+                    banca: venta ? venta.banca : normStr(findField(r, ['Banca'])),
+                    canal: venta ? venta.canal : normStr(findField(r, ['Canal'])),
+                    aseguradoraVenta: venta ? venta.aseguradora : 'COLMENA',
+                    fecha,
+                    valor: toNum(findField(r, ['Monto_Devolucion', 'MontoDevolucion'])),
+                    estado: normStr(findField(r, ['Estado_Devolucion', 'EstadoDevolucion'])),
+                    comision: toNum(findField(r, ['COMISIÓN REDON', 'COMISION REDON', 'COMISION_REDON',
+                        'COMISIÓN'
+                    ])),
+                    iva: toNum(findField(r, ['IVA REDON', 'IVA_REDON', 'IVA'])),
+                    year,
+                    month
+                });
+            }
+            STATE.data.ventas = ventas;
+            STATE.data.devoluciones = devo;
+            updateFilterOptions();
+        }
+        function updateFilterOptions() {
+            const ventas = STATE.data.ventas;
+            const monthsByYear = {};
+            ventas.forEach(v => {
+                if (v.year == null || v.month == null) return;
+                if (v.month < 0 || v.month > 11) return;
+                if (!monthsByYear[v.year]) monthsByYear[v.year] = new Set();
+                monthsByYear[v.year].add(v.month);
+            });
+            STATE.monthsByYear = monthsByYear;
+            const years = Object.keys(monthsByYear).map(Number).sort((a, b) => a - b);
+            const fy = document.getElementById('fYear');
+            fy.innerHTML = '<option value="">Todos</option>' + years.map(y => `<option>${y}</option>`).join('');
+            if (STATE.filters.year && !years.includes(+STATE.filters.year)) STATE.filters.year = '';
+            fy.value = STATE.filters.year;
+            updateMonthOptions();
+        }
+        function updateMonthOptions() {
+            const fm = document.getElementById('fMonth');
+            const year = STATE.filters.year;
+            let monthsAvail;
+            if (year && STATE.monthsByYear[year]) {
+                monthsAvail = [...STATE.monthsByYear[year]].sort((a, b) => a - b);
+            } else {
+                const union = new Set();
+                Object.values(STATE.monthsByYear).forEach(s => s.forEach(m => union.add(m)));
+                monthsAvail = [...union].sort((a, b) => a - b);
+            }
+            const current = STATE.filters.month;
+            fm.innerHTML = '<option value="">Todos</option>' + monthsAvail.map(m =>
+                `<option value="${m}">${MONTHS[m]}</option>`).join('');
+            if (current !== '' && monthsAvail.includes(+current)) {
+                fm.value = current;
+            } else {
+                fm.value = '';
+                STATE.filters.month = '';
+            }
+        }
+        function applyFilters(arr) {
+            return arr.filter(r => {
+                if (STATE.filters.aseg) {
+                    const asegRef = r.aseguradoraVenta || r.aseguradora;
+                    if (asegRef !== STATE.filters.aseg) return false;
+                }
+                if (STATE.filters.year && r.year !== +STATE.filters.year) return false;
+                if (STATE.filters.month !== '' && r.month !== +STATE.filters.month) return false;
+                return true;
+            });
+        }
+        function getFiltered() {
+            return {
+                ventas: applyFilters(STATE.data.ventas),
+                devoluciones: applyFilters(STATE.data.devoluciones)
+            };
+        }
+        function applyTrendFilters(arr) {
+            return arr.filter(r => {
+                if (STATE.filters.aseg) {
+                    const asegRef = r.aseguradoraVenta || r.aseguradora;
+                    if (asegRef !== STATE.filters.aseg) return false;
+                }
+                if (STATE.filters.year && r.year !== +STATE.filters.year) return false;
+                if (STATE.filters.month !== '' && r.month !== +STATE.filters.month) return false;
+                return true;
+            });
+        }
+        function getTrendFiltered() {
+            return {
+                ventas: applyTrendFilters(STATE.data.ventas),
+                devoluciones: applyTrendFilters(STATE.data.devoluciones)
+            };
+        }
+        function hasActiveFilters() {
+            return !!(STATE.filters.aseg || STATE.filters.year || STATE.filters.month !== '');
+        }
+        function getCompareData() {
+            const { aseg, year, month } = STATE.filters;
+            const baseFilter = r => {
+                if (aseg) {
+                    const asegRef = r.aseguradoraVenta || r.aseguradora;
+                    if (asegRef !== aseg) return false;
+                }
+                return true;
+            };
+            if (!year && !month) {
+                return {
+                    ventas: STATE.data.ventas.filter(baseFilter),
+                    devoluciones: STATE.data.devoluciones.filter(baseFilter),
+                    compareLabel: COMPARE_LABELS['vs todos los períodos'],
+                    compareKey: 'base'
+                };
+            }
+            if (year && month !== '' && month != null) {
+                let compYear = +year;
+                let compMonth = +month - 1;
+                if (compMonth < 0) {
+                    compMonth = 11;
+                    compYear -= 1;
+                }
+                const f = r => {
+                    if (!baseFilter(r)) return false;
+                    return r.year === compYear && r.month === compMonth;
+                };
+                return {
+                    ventas: STATE.data.ventas.filter(f),
+                    devoluciones: STATE.data.devoluciones.filter(f),
+                    compareLabel: COMPARE_LABELS['vs mes anterior'],
+                    compareKey: 'month'
+                };
+            }
+            if (year) {
+                const py = +year - 1;
+                const f = r => {
+                    if (!baseFilter(r)) return false;
+                    if (month !== '' && month != null && r.month !== +month) return false;
+                    return r.year === py;
+                };
+                const labelKey = month !== '' && month != null ? 'vs año ant. mismo mes' : 'vs año ant.';
+                return {
+                    ventas: STATE.data.ventas.filter(f),
+                    devoluciones: STATE.data.devoluciones.filter(f),
+                    compareLabel: COMPARE_LABELS[labelKey],
+                    compareKey: 'year'
+                };
+            }
+            return {
+                ventas: STATE.data.ventas.filter(baseFilter),
+                devoluciones: STATE.data.devoluciones.filter(baseFilter),
+                compareLabel: COMPARE_LABELS['vs todos los períodos'],
+                compareKey: 'base'
+            };
+        }
+        function metrics(ventas, devoluciones) {
+            const totalVentas = sumBy(ventas, 'valorRecaudado');
+            const totalDevo = sumBy(devoluciones, 'valor');
+            const netas = totalVentas - totalDevo;
+            const polizas = ventas.length;
+            const polizasCancel = devoluciones.length;
+            const tasaCancel = polizas > 0 ? (polizasCancel / polizas) * 100 : 0;
+            const comBruta = sumBy(ventas, 'comision');
+            const ivaBruto = sumBy(ventas, 'ivaComision');
+            const comDevo = sumBy(devoluciones, 'comision');
+            const ivaDevo = sumBy(devoluciones, 'iva');
+            const comNeta = comBruta - comDevo;
+            const ivaNeto = ivaBruto - ivaDevo;
+            const retorno = comNeta + ivaNeto;
+            return { totalVentas, totalDevo, netas, polizas, polizasCancel, tasaCancel, comBruta, ivaBruto, comDevo,
+                ivaDevo, comNeta, ivaNeto, retorno };
+        }
+        function delta(cur, prev) {
+            if (!prev || Math.abs(prev) < 1e-9) {
+                return { val: cur, pct: 0, dir: 'flat' };
+            }
+            const d = cur - prev;
+            const p = (d / Math.abs(prev)) * 100;
+            if (!isFinite(p) || Math.abs(p) > 999) {
+                return { val: d, pct: 0, dir: 'flat' };
+            }
+            return { val: d, pct: p, dir: p > 0.5 ? 'up' : p < -0.5 ? 'down' : 'flat' };
+        }
+        function getChartColors() {
+            const isDark = document.body.dataset.theme === 'dark';
+            return {
+                text: isDark ? '#94a69b' : '#64766c',
+                axisText: isDark ? '#4ade80' : '#1b5e20',
+                grid: isDark ? 'rgba(148,163,184,0.08)' : 'rgba(0,0,0,0.06)',
+                border: isDark ? 'rgba(148,163,184,0.15)' : 'rgba(0,0,0,0.1)',
+                datalabel: isDark ? '#cbd8ce' : '#0f1a13',
+                datalabelOnDark: '#ffffff',
+                tooltipBg: isDark ? '#1a2820' : '#ffffff',
+                tooltipBorder: isDark ? '#2a3d30' : '#e1e9e3',
+                tooltipTitle: isDark ? '#f4f9f5' : '#0f1a13',
+                tooltipBody: isDark ? '#cbd8ce' : '#33413a',
+                pieBorder: isDark ? '#111c15' : '#ffffff'
+            };
+        }
+        function destroyChart(id) {
+            if (STATE.charts[id]) { STATE.charts[id].destroy();
+                delete STATE.charts[id]; }
+        }
+        function makeChart(id, cfg) {
+            destroyChart(id);
+            const ctx = document.getElementById(id);
+            if (!ctx) return null;
+            const c = new Chart(ctx, cfg);
+            STATE.charts[id] = c;
+            return c;
+        }
+        function fitChartWidth(canvasId, periodCount, minPerPeriod = 70) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const wrap = canvas.parentElement;
+            wrap.classList.add('scroll-x');
+            canvas.style.width = Math.max(wrap.clientWidth, periodCount * minPerPeriod) + 'px';
+        }
+        const yearLabelsPlugin = {
+            id: 'yearLabels',
+            afterDraw(chart) {
+                if (!chart.options.plugins.yearLabels) return;
+                const xAxis = chart.scales.x;
+                if (!xAxis) return;
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.font = '600 11px Inter';
+                ctx.fillStyle = getChartColors().text;
+                ctx.textAlign = 'center';
+                const years = {};
+                chart.data.labels.forEach((label, i) => {
+                    const parts = label.split('-');
+                    const year = parts[0];
+                    if (!years[year]) years[year] = [];
+                    years[year].push(i);
+                });
+                Object.keys(years).forEach(year => {
+                    const indices = years[year];
+                    const first = indices[0];
+                    const last = indices[indices.length - 1];
+                    const x1 = xAxis.getPixelForValue(first);
+                    const x2 = xAxis.getPixelForValue(last);
+                    const centerX = (x1 + x2) / 2;
+                    const y = xAxis.bottom + 20;
+                    ctx.fillText(year, centerX, y);
+                });
+                if (typeof chart.options.plugins.yearLabels === 'string') {
+                    ctx.font = '600 8px Inter';
+                    ctx.fillStyle = getChartColors().text;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(chart.options.plugins.yearLabels, (xAxis.left + xAxis.right) / 2, xAxis.bottom +
+                    40);
+                }
+                ctx.restore();
+            }
+        };
+        const yearDividerPlugin = {
+            id: 'yearDivider',
+            beforeDraw(chart) {
+                if (!chart.options.plugins.yearDivider) return;
+                const xAxis = chart.scales.x;
+                if (!xAxis) return;
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.strokeStyle = getChartColors().border;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                let prevYear = null;
+                chart.data.labels.forEach((label, i) => {
+                    const parts = label.split('-');
+                    const year = parts[0];
+                    if (prevYear && year !== prevYear) {
+                        const x1 = xAxis.getPixelForValue(i - 1);
+                        const x2 = xAxis.getPixelForValue(i);
+                        const x = (x1 + x2) / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(x, xAxis.top);
+                        ctx.lineTo(x, xAxis.bottom);
+                        ctx.stroke();
+                    }
+                    prevYear = year;
+                });
+                ctx.restore();
+            }
+        };
+        Chart.register(yearLabelsPlugin, yearDividerPlugin);
+        const X_TICKS = {
+            font: { size: window.innerWidth < 768 ? 8 : 10, weight: '400' },
+            maxRotation: 0,
+            minRotation: 0,
+            autoSkip: false,
+            maxTicksLimit: 200,
+            fontStyle: 'normal',
+            fontFamily: "'Inter','Segoe UI',system-ui,-apple-system,sans-serif"
+        };
+        const Y_TICKS = {
+            font: { size: 8 }
+        };
+        function baseOpts(yTitle, xTitle) {
+            const cc = getChartColors();
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { color: cc.text, padding: 12, boxWidth: 10,
+                            font: { size: 11 } } },
+                    datalabels: { display: false },
+                    yearLabels: xTitle || false,
+                    tooltip: {
+                        backgroundColor: cc.tooltipBg,
+                        borderColor: cc.tooltipBorder,
+                        borderWidth: 1,
+                        titleColor: cc.tooltipTitle,
+                        bodyColor: cc.tooltipBody,
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: {
+                            label: ctx => ' ' + ctx.dataset.label + ': ' + fmtMoney(ctx.parsed.y != null ? ctx
+                                .parsed.y : ctx.parsed)
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: false },
+                        grid: { display: false },
+                        ticks: {
+                            ...X_TICKS,
+                            color: cc.axisText,
+                            callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                if (label && /^\d{4}-\d{2}$/.test(label)) {
+                                    const parts = label.split('-');
+                                    return MONTHS[+parts[1] - 1];
+                                }
+                                return wrapLabel(label);
+                            }
+                        },
+                        border: { color: cc.border }
+                    },
+                    y: {
+                        title: { display: !!yTitle, text: yTitle || '', color: cc.text, font: { size: 8,
+                                weight: '600' } },
+                        ticks: { ...Y_TICKS, color: cc.text, callback: v => fmtMoney(v) },
+                        grid: { color: cc.grid },
+                        border: { color: cc.border }
+                    }
+                },
+                interaction: { mode: 'index', intersect: false },
+                layout: { padding: { bottom: 50, top: 28 } }
+            };
+        }
+        function baseOptsH(yTitle, xTitle) {
+            const cc = getChartColors();
+            return {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        align: 'right',
+                        color: '#ffffff',
+                        font: { size: 10, weight: '600' },
+                        formatter: v => fmtMoney(v),
+                        backgroundColor: 'rgba(27,94,32,0.75)',
+                        borderRadius: 4,
+                        padding: { top: 4, bottom: 4, left: 8, right: 8 }
+                    },
+                    tooltip: {
+                        backgroundColor: cc.tooltipBg,
+                        borderColor: cc.tooltipBorder,
+                        borderWidth: 1,
+                        titleColor: cc.tooltipTitle,
+                        bodyColor: cc.tooltipBody,
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmtMoney(ctx.parsed.x) }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: !!xTitle, text: xTitle || '', color: cc.text, font: { size: 8,
+                                weight: '600' } },
+                        ticks: { ...Y_TICKS, color: cc.text, callback: v => fmtMoney(v) },
+                        grid: { color: cc.grid },
+                        border: { color: cc.border }
+                    },
+                    y: {
+                        type: 'category',
+                        title: { display: !!yTitle, text: yTitle || '', color: cc.text, font: { size: 8,
+                                weight: '600' } },
+                        ticks: { ...X_TICKS, color: cc.axisText,
+                        callback: function(value) {  
+                           return wrapLabel(this.getLabelForValue(value));
+                        }  
+                    },
+                        grid: { display: false },
+                        border: { color: cc.border }
+                    }
+                }
+            };
+        }
+        function baseOptsHPct(yTitle, xTitle) {
+            const cc = getChartColors();
+            return {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { display: true, align: 'right', color: cc.datalabel, font: { size: 10,
+                            weight: '600' }, formatter: v => fmtPct(v) },
+                    tooltip: {
+                        backgroundColor: cc.tooltipBg,
+                        borderColor: cc.tooltipBorder,
+                        borderWidth: 1,
+                        titleColor: cc.tooltipTitle,
+                        bodyColor: cc.tooltipBody,
+                        padding: 10,
+                        cornerRadius: 6,
+                        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmtPct(ctx.parsed.x) }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: !!xTitle, text: xTitle || '', color: cc.text, font: { size: 8,
+                                weight: '600' } },
+                        ticks: { ...Y_TICKS, color: cc.text, callback: v => fmtPct(v) },
+                        grid: { color: cc.grid },
+                        border: { color: cc.border }
+                    },
+                    y: {
+                        type: 'category',
+                        title: { display: !!yTitle, text: yTitle || '', color: cc.text, font: { size: 8,
+                                weight: '600' } },
+                        ticks: { ...X_TICKS, color: cc.axisText,
+                        callback: function(value) {  
+                           return wrapLabel(this.getLabelForValue(value));
+                        }  
+                    },
+                        grid: { display: false },
+                        border: { color: cc.border }
+                    }
+                }
+            };
+        }
+        function kpiCard(label, value, deltaCompare, compareLabel, icon = 'chart-line', cls = '') {
+            if (deltaCompare === false) {
+                return `
+<div class="kpi-card ${cls}">
+    <div class="kpi-label"><i class="fas fa-${icon}"></i>${label}</div>
+    <div class="kpi-row">
+        <div class="kpi-value">${value}</div>
+    </div>
+    <div class="kpi-sub">${compareLabel}</div>
+</div>`;
+            }
+            const d = deltaCompare || { pct: 0, dir: 'flat' };
+            const arrow = d.dir === 'up' ? '↑' : d.dir === 'down' ? '↓' : '→';
+            const clsD = d.dir === 'up' ? 'up' : d.dir === 'down' ? 'down' : 'flat';
+            return `
+<div class="kpi-card ${cls}">
+    <div class="kpi-label"><i class="fas fa-${icon}"></i>${label}</div>
+    <div class="kpi-row">
+        <div class="kpi-value">${value}</div>
+        <span class="kpi-delta ${clsD}">${arrow} ${fmtPct(Math.abs(d.pct))}</span>
+    </div>
+</div>`;
+        }
+        function buildInsights(m, ventas, devoluciones) {
+            const ins = [];
+            const totalV = m.totalVentas;
+            if (totalV === 0) {
+                return [{ type: 'info', icon: 'info-circle',
+                    text: 'No hay datos filtrados. Ajusta los filtros globales para ver análisis.' }];
+            }
+            const byReg = Object.entries(groupBy(ventas, 'regional')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valorRecaudado'), c: v.length })).sort((a, b) => b.v - a.v);
+            if (byReg[0] && byReg[0].v > 0) ins.push({ type: 'success', icon: 'trophy',
+                text: `<strong>${byReg[0].k}</strong> lidera las ventas con ${fmtMoney(byReg[0].v)} (${fmtPct((byReg[0].v / totalV) * 100)} del total) y ${fmtNum(byReg[0].c)} pólizas.` });
+            const byProd = Object.entries(groupBy(ventas, 'nombreProducto')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valorRecaudado') })).sort((a, b) => b.v - a.v);
+            if (byProd[0] && byProd[0].v > 0) ins.push({ type: 'info', icon: 'box',
+                text: `El producto <strong>${byProd[0].k || '(sin nombre)'}</strong> representa el ${fmtPct((byProd[0].v / totalV) * 100)} de las ventas.` });
+            const byAseg = Object.entries(groupBy(ventas, 'aseguradora')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valorRecaudado') })).sort((a, b) => b.v - a.v);
+            if (byAseg[0] && byAseg[0].v > 0) ins.push({ type: 'info', icon: 'shield-alt',
+                text: `<strong>${byAseg[0].k}</strong> aporta el ${fmtPct((byAseg[0].v / totalV) * 100)} del valor recaudado.` });
+            if (m.tasaCancel > 0) {
+                ins.push({ type: 'danger', icon: 'exclamation-triangle',
+                    text: `La tasa general de cancelación es <strong>${fmtPct(m.tasaCancel)}</strong> (${fmtNum(m.polizasCancel)} pólizas canceladas de ${fmtNum(m.polizas)}).` });
+            }
+            if (m.comNeta > 0) ins.push({ type: 'success', icon: 'coins',
+                text: `Comisión neta generada: <strong>${fmtMoney(m.comNeta)}</strong> (+ IVA neto ${fmtMoney(m.ivaNeto)}).` });
+            const byOf = Object.entries(groupBy(ventas, 'nombreOficina')).map(([k, v]) => {
+                const dv = sumBy(devoluciones.filter(d => d.oficina === k), 'valor');
+                const vt = sumBy(v, 'valorRecaudado');
+                return { k, vt, dv, tasa: vt > 0 ? (dv / vt) * 100 : 0, c: v.length };
+            }).filter(x => x.c >= 3).sort((a, b) => b.tasa - a.tasa);
+            if (byOf[0] && byOf[0].tasa > 10) ins.push({ type: 'warning', icon: 'building',
+                text: `La oficina <strong>${byOf[0].k}</strong> presenta alta cancelación (${fmtPct(byOf[0].tasa)}).` });
+            const devoByProd = Object.entries(groupBy(devoluciones, 'producto')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valor'), c: v.length })).sort((a, b) => b.v - a.v);
+            if (devoByProd[0] && devoByProd[0].v > 0) ins.push({ type: 'danger', icon: 'undo',
+                text: `El producto <strong>${devoByProd[0].k || '(sin nombre)'}</strong> concentra la mayor devolución con ${fmtMoney(devoByProd[0].v)} en ${devoByProd[0].c} cancelaciones.` });
+            const byYM = groupByYM(ventas);
+            const ymKeys = sortedYM(byYM);
+            if (ymKeys.length >= 2) {
+                const lastK = ymKeys[ymKeys.length - 1],
+                    prevK = ymKeys[ymKeys.length - 2];
+                const lastV = sumBy(byYM[lastK], 'valorRecaudado'),
+                    prevV = sumBy(byYM[prevK], 'valorRecaudado');
+                const d = prevV > 0 ? ((lastV - prevV) / prevV) * 100 : 0;
+                if (d > 5) ins.push({ type: 'success', icon: 'arrow-up',
+                    text: `Crecimiento mensual del <strong>${fmtPct(d)}</strong> en ${ymLabel(lastK)} vs ${ymLabel(prevK)}.` });
+                else if (d < -5) ins.push({ type: 'danger', icon: 'arrow-down',
+                    text: `Caída mensual del <strong>${fmtPct(Math.abs(d))}</strong> en ${ymLabel(lastK)} vs ${ymLabel(prevK)}.` });
+                else ins.push({ type: 'info', icon: 'minus',
+                    text: `Operación estable: variación del ${fmtPct(d)} entre ${ymLabel(prevK)} y ${ymLabel(lastK)}.` });
+            }
+            return ins;
+        }
+        function renderInsights(insights, containerId) {
+            const c = document.getElementById(containerId);
+            if (!c) return;
+            c.innerHTML = insights.map(i => `
+            <div class="insight ${i.type}">
+                <i class="fas fa-${i.icon}"></i>
+                <div>${i.text}</div>
+            </div>`).join('');
+        }
+        function renderHome() {
+            const { ventas, devoluciones } = getFiltered();
+            const compData = getCompareData();
+            const m = metrics(ventas, devoluciones);
+            const mC = metrics(compData.ventas, compData.devoluciones);
+            const dCompare = {
+                ventas: delta(m.totalVentas, mC.totalVentas),
+                netas: delta(m.netas, mC.netas),
+                pol: delta(m.polizas, mC.polizas),
+                devo: delta(m.totalDevo, mC.totalDevo),
+                polC: delta(m.polizasCancel, mC.polizasCancel),
+                com: delta(m.comNeta, mC.comNeta),
+                retorno: delta(m.comBruta, mC.comBruta),
+                iva: delta(m.ivaNeto, mC.ivaNeto)
+            };
+            const clsCard = v => v > 5 ? 'success' : v < -5 ? 'danger' : v > 0 ? 'success' : v < 0 ? 'danger' : '';
+            const el = document.getElementById('page-home');
+            el.innerHTML = `
+            <div class="kpi-grid">
+                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
+                ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
+                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Tendencia mensual de ventas netas</div></div>
+                    <div class="chart-wrap"><canvas id="ch-home-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Participación por Aseguradora</div></div>
+                    <div class="chart-wrap sm"><canvas id="ch-home-aseg"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-map-marked-alt"></i>Regionales <small>Click para drill-down</small></div>
+                </div>
+                <div id="home-regionales"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-lightbulb"></i>Executive Insights</div>
+                </div>
+                <div class="insight-list" id="home-insights"></div>
+            </div>
+            `;
+            const cc = getChartColors();
+            const byMonthV = groupByYM(ventas);
+            const byMonthD = groupByYM(devoluciones);
+            const ymKeys = [...new Set([...Object.keys(byMonthV), ...Object.keys(byMonthD)])].sort();
+            const dataV = ymKeys.map(k => sumBy(byMonthV[k] || [], 'valorRecaudado'));
+            const dataD = ymKeys.map(k => sumBy(byMonthD[k] || [], 'valor'));
+            const dataN = dataV.map((v, i) => v - dataD[i]);
+            const labels = ymKeys;
+            const opts = baseOpts('Valor Recaudado', 'Período (Mes-Año)');
+            fitChartWidth('ch-home-trend', ymKeys.length);
+            makeChart('ch-home-trend', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ventas',
+                        data: dataV,
+                        backgroundColor: COLORS.verdeIntenso,
+                        borderColor: COLORS.verdeIntenso,
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barPercentage: .6,
+                        datalabels: { display: true, align: 'bottom', anchor: 'end', offset: 2,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(27,94,32,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }, {
+                        label: 'Devoluciones',
+                        data: dataD,
+                        backgroundColor: COLORS.rojo,
+                        borderColor: COLORS.rojo,
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barPercentage: .6,
+                        datalabels: { display: true, align: 'top', anchor: 'end', offset: 2,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }, {
+                        label: 'Ventas Netas',
+                        data: dataN,
+                        type: 'line',
+                        borderColor: COLORS.verdeNeta,
+                        backgroundColor: 'rgba(0,200,83,.1)',
+                        fill: true,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: COLORS.verdeNeta,
+                        datalabels: { display: true, align: 'top', anchor: 'end', offset: 4,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(0,200,83,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }]
+                },
+                options: { ...opts, plugins: { ...opts.plugins, yearDivider: true } }
+            });
+            const byAseg = Object.entries(groupBy(ventas, 'aseguradora')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valorRecaudado') }));
+            makeChart('ch-home-aseg', {
+                type: 'doughnut',
+                data: {
+                    labels: byAseg.map(x => x.k),
+                    datasets: [{ data: byAseg.map(x => x.v),
+                        backgroundColor: [COLORS.verdePetroleo, COLORS.verdeMedio,
+                            COLORS.verdeClaro
+                        ], borderWidth: 2, borderColor: cc.pieBorder }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right', labels: { padding: 12, font: { size: 11 },
+                                color: cc.text } },
+                        datalabels: { display: true, formatter: (value, context) => { const t =
+                                context.dataset.data.reduce((a, b) => a + b, 0); return t >
+                                0 ? fmtPct((value / t) * 100) : '0%' }, color: '#fff',
+                            font: { size: 11, weight: '700' },
+                            backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 4,
+                            padding: 4 },
+                        title: { display: true, text: 'Aseguradora', color: cc.text, font: { size: 11,
+                                weight: '600' } }
+                    }
+                }
+            });
+            renderRegionalesTable(ventas, devoluciones, 'home-regionales', true);
+            renderInsights(buildInsights(m, ventas, devoluciones), 'home-insights');
+        }
+        function renderRegionalesTable(ventas, devoluciones, containerId, clickable = false) {
+            const byReg = groupBy(ventas, 'regional');
+            const devoByReg = groupBy(devoluciones, 'regional');
+            const rows = Object.keys(byReg).map(r => {
+                const v = byReg[r];
+                const d = devoByReg[r] || [];
+                const vt = sumBy(v, 'valorRecaudado');
+                const dv = sumBy(d, 'valor');
+                const net = vt - dv;
+                const pol = v.length;
+                const com = sumBy(v, 'comision') - sumBy(d, 'comision');
+                const iva = sumBy(v, 'ivaComision') - sumBy(d, 'iva');
+                const tasa = vt > 0 ? (dv / vt) * 100 : 0;
+                return { reg: r, vt, dv, net, pol, com, iva, tasa };
+            }).sort((a, b) => b.vt - a.vt);
+            const total = rows.reduce((a, b) => ({ vt: a.vt + b.vt, dv: a.dv + b.dv, net: a.net + b.net, pol: a.pol +
+                    b.pol, ret: a.ret + b.com + b.iva }), { vt: 0, dv: 0, net: 0, pol: 0, ret: 0 });
+            const tagEstado = t => t > 20 ? '<span class="tag bad">Riesgo</span>' : t > 10 ?
+                '<span class="tag warn">Alerta</span>' : '<span class="tag ok">Excelente</span>';
+            if (rows.length === 0) {
+                document.getElementById(containerId).innerHTML =
+                    `<div class="empty"><i class="fas fa-map-marked-alt"></i><h3>Sin datos</h3><p>No hay regionales para los filtros seleccionados.</p></div>`;
+                return;
+            }
+            const html = `
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr>
+                        <th style="text-align:left">Regional</th><th class="num">Ventas</th><th class="num">Devoluciones</th>
+                        <th class="num">Netas</th><th class="num">Pólizas</th><th class="num">Retorno</th>
+                        <th class="pct">% Cancel.</th><th>Estado</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                        <tr ${clickable ? `class="clickable" data-reg="${normStr(r.reg).replace(/"/g, '&quot;')}"` : ''}>
+                            <td style="text-align:left"><strong>${r.reg || '(sin regional)'}</strong></td>
+                            <td class="num">${fmtMoney(r.vt)}</td>
+                            <td class="num" style="color:var(--rojo)">${fmtMoney(r.dv)}</td>
+                            <td class="num" style="color:var(--verde-intenso);font-weight:600">${fmtMoney(r.net)}</td>
+                            <td class="num">${fmtNum(r.pol)}</td>
+                            <td class="num">${fmtMoney(r.com + r.iva)}</td>
+                            <td class="pct">${fmtPct(r.tasa)}</td>
+                            <td>${tagEstado(r.tasa)}</td>
+                        </tr>`).join('')}
+                        <tr style="background:var(--bg-2);font-weight:700">
+                            <td style="text-align:left">TOTAL</td>
+                            <td class="num">${fmtMoney(total.vt)}</td>
+                            <td class="num">${fmtMoney(total.dv)}</td>
+                            <td class="num">${fmtMoney(total.net)}</td>
+                            <td class="num">${fmtNum(total.pol)}</td>
+                            <td class="num">${fmtMoney(total.ret)}</td>
+                            <td class="pct">${fmtPct(total.vt > 0 ? (total.dv / total.vt) * 100 : 0)}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+            document.getElementById(containerId).innerHTML = html;
+            if (clickable) {
+                document.querySelectorAll(`#${containerId} tr.clickable`).forEach(tr => {
+                    tr.addEventListener('click', () => {
+                        const reg = tr.dataset.reg;
+                        STATE.drill = { regional: reg, zonal: null, oficina: null };
+                        navigateTo('regionales');
+                    });
+                });
+            }
+        }
+        function renderOperacion() {
+            const { ventas, devoluciones } = getFiltered();
+            const compData = getCompareData();
+            const m = metrics(ventas, devoluciones);
+            const mC = metrics(compData.ventas, compData.devoluciones);
+            const dCompare = {
+                ventas: delta(m.totalVentas, mC.totalVentas),
+                netas: delta(m.netas, mC.netas),
+                pol: delta(m.polizas, mC.polizas),
+                devo: delta(m.totalDevo, mC.totalDevo),
+                polC: delta(m.polizasCancel, mC.polizasCancel),
+                com: delta(m.comNeta, mC.comNeta),
+                retorno: delta(m.comBruta, mC.comBruta),
+                iva: delta(m.ivaNeto, mC.ivaNeto)
+            };
+            const clsCard = v => v > 5 ? 'success' : v < -5 ? 'danger' : v > 0 ? 'success' : v < 0 ? 'danger' : '';
+            const el = document.getElementById('page-operacion');
+            el.innerHTML = `
+            <div class="kpi-grid">
+                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
+                ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
+                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-bar"></i>Ventas por Banca</div></div>
+                    <div class="chart-wrap"><canvas id="ch-op-banca"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-route"></i>Ventas por Canal</div></div>
+                    <div class="chart-wrap"><canvas id="ch-op-canal"></canvas></div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-venus-mars"></i>Distribución por Sexo</div></div>
+                    <div class="chart-wrap sm"><canvas id="ch-op-sexo"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-layer-group"></i>Ventas por Tipo</div></div>
+                    <div class="chart-wrap sm"><canvas id="ch-op-tipo"></canvas></div>
+                </div>
+            </div>
+            `;
+            const cc = getChartColors();
+            const byBanca = Object.entries(groupBy(ventas, 'banca')).map(([k, v]) => ({ k: k || '(sin banca)',
+                v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+            const optsH = baseOptsH('Banca', 'Valor Recaudado');
+            const gradBanca = greenGradient(byBanca.length);
+            makeChart('ch-op-banca', { type: 'bar', data: { labels: byBanca.map(x => x.k),
+                    datasets: [{ label: 'Ventas', data: byBanca.map(x => x.v),
+                        backgroundColor: gradBanca, borderRadius: 4 }] }, options: optsH });
+            const byCanal = Object.entries(groupBy(ventas, 'canal')).map(([k, v]) => ({ k: k || '(sin canal)',
+                v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+            const optsC = baseOpts('Valor Recaudado', 'Canal');
+            const gradCanal = greenGradient(byCanal.length);
+            makeChart('ch-op-canal', { type: 'bar', data: { labels: byCanal.map(x => x.k),
+                    datasets: [{ label: 'Ventas', data: byCanal.map(x => x.v),
+                        backgroundColor: gradCanal, borderRadius: 4 }] },
+                options: { ...optsC, plugins: { ...optsC.plugins, legend: { display: false },
+                        yearLabels: false, datalabels: { display: true, align: 'top',
+                            color: '#fff', font: { size: 8, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(27,94,32,0.8)',
+                            borderRadius: 3, padding: 3 } } } });
+            const bySexo = Object.entries(groupBy(ventas, 'sexo')).map(([k, v]) => ({ k: k || '(sin dato)',
+                v: v.length }));
+            makeChart('ch-op-sexo', { type: 'doughnut', data: { labels: bySexo.map(x => x.k),
+                    datasets: [{ data: bySexo.map(x => x.v),
+                        backgroundColor: [COLORS.verdePetroleo, COLORS.verdeMedio,
+                            COLORS.verdeClaro, '#c8e6c9'
+                        ], borderWidth: 2, borderColor: cc.pieBorder }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { datalabels: { display: true, formatter: (value,
+                            context) => { const t = context.dataset.data.reduce((
+                                a, b) => a + b, 0); return t > 0 ? fmtPct((
+                                value / t) * 100) : '0%' }, color: '#fff',
+                            font: { size: 11, weight: '700' },
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            borderRadius: 4, padding: 4 }, title: { display: true,
+                            text: 'Sexo del Asegurado', color: cc.text,
+                            font: { size: 11, weight: '600' } } } } });
+            const byTipo = Object.entries(groupBy(ventas, 'tipo')).map(([k, v]) => ({ k: k || '(sin tipo)',
+                v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+            makeChart('ch-op-tipo', { type: 'pie', data: { labels: byTipo.map(x => x.k),
+                    datasets: [{ data: byTipo.map(x => x.v),
+                        backgroundColor: [COLORS.verdePetroleo, COLORS.verdeMedio,
+                            COLORS.verdeClaro, '#c8e6c9'
+                        ], borderWidth: 2, borderColor: cc.pieBorder }] },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { datalabels: { display: true, formatter: (value,
+                            context) => { const t = context.dataset.data.reduce((
+                                a, b) => a + b, 0); return t > 0 ? fmtPct((
+                                value / t) * 100) : '0%' }, color: '#fff',
+                            font: { size: 11, weight: '700' },
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            borderRadius: 4, padding: 4 }, title: { display: true,
+                            text: 'Tipo de Producto', color: cc.text,
+                            font: { size: 11, weight: '600' } } } } });
+        }
+        function renderVentas() {
+    const { ventas } = getFiltered();
+    const compData = getCompareData();
+    const m = metrics(ventas, []);
+    const mC = metrics(compData.ventas, []);
+    const total = sumBy(ventas, 'valorRecaudado');
+    
+    const dCompare = {
+        ventas: delta(m.totalVentas, mC.totalVentas),
+        pol: delta(m.polizas, mC.polizas),
+        com: delta(m.comNeta, mC.comNeta)
+    };
+    const clsCard = v => v > 5 ? 'success' : v < -5 ? 'danger' : v > 0 ? 'success' : v < 0 ? 'danger' : '';
+    
+    const el = document.getElementById('page-ventas');
+    const vGrouped = groupBy(ventas, v => `${v.regional}|||${v.aseguradora}`);
+    const vRows = Object.entries(vGrouped).map(([k, v]) => {
+        const parts = k.split('|||');
+        return {
+            regional: parts[0] || '(sin regional)',
+            aseguradora: parts[1] || '(sin aseguradora)',
+            cantidad: v.length,
+            valor: sumBy(v, 'valorRecaudado')
+        };
+    }).sort((a, b) => b.valor - a.valor);
+    
+    el.innerHTML = `
+    <div class="kpi-grid">
+        ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+        ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
+        ${kpiCard('Ticket Promedio', fmtMoney(ventas.length > 0 ? total / ventas.length : 0), null, '', 'receipt')}
+        ${kpiCard('Prima Neta', fmtMoney(sumBy(ventas, 'primaNeta')), null, '', 'dollar-sign')}
+    </div>
+    <div class="grid-2">
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Evolución mensual de ventas</div></div>
+            <div class="chart-wrap"><canvas id="ch-v-trend"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-box"></i>Top 10 productos</div></div>
+            <div class="chart-wrap"><canvas id="ch-v-prod"></canvas></div>
+        </div>
+    </div>
+    <div class="grid-2">
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-map"></i>Ventas por Regional</div></div>
+            <div class="chart-wrap"><canvas id="ch-v-reg"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-building"></i>Top 10 oficinas</div></div>
+            <div class="chart-wrap"><canvas id="ch-v-of"></canvas></div>
+        </div>
+    </div>
+    <div class="detalle-bloques">
+        <div class="bloque-aseguradora">
+            <h3>CARDIF</h3>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                    <tbody>
+                        ${vRows.filter(v => v.aseguradora === 'CARDIF').slice(0, 20).map(v => `<tr>
+                            <td style="text-align:left">${v.regional}</td>
+                            <td class="num">${fmtNum(v.cantidad)}</td>
+                            <td class="num">${fmtMoney(v.valor)}</td>
+                        </tr>`).join('')}
+                        ${vRows.filter(v => v.aseguradora === 'CARDIF').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="bloque-aseguradora">
+            <h3>MAPFRE</h3>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                    <tbody>
+                        ${vRows.filter(v => v.aseguradora === 'MAPFRE').slice(0, 20).map(v => `<tr>
+                            <td style="text-align:left">${v.regional}</td>
+                            <td class="num">${fmtNum(v.cantidad)}</td>
+                            <td class="num">${fmtMoney(v.valor)}</td>
+                        </tr>`).join('')}
+                        ${vRows.filter(v => v.aseguradora === 'MAPFRE').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="bloque-aseguradora">
+            <h3>COLMENA</h3>
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                    <tbody>
+                        ${vRows.filter(v => v.aseguradora === 'COLMENA').slice(0, 20).map(v => `<tr>
+                            <td style="text-align:left">${v.regional}</td>
+                            <td class="num">${fmtNum(v.cantidad)}</td>
+                            <td class="num">${fmtMoney(v.valor)}</td>
+                        </tr>`).join('')}
+                        ${vRows.filter(v => v.aseguradora === 'COLMENA').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    `;
+    const cc = getChartColors();
+    const trendData = getTrendFiltered();
+    const byYM = groupByYM(trendData.ventas);
+    const ymKeys = sortedYM(byYM);
+    const optsT = baseOpts('Valor Recaudado', 'Período (Mes-Año)');
+    fitChartWidth('ch-v-trend', ymKeys.length);
+    makeChart('ch-v-trend', {
+        type: 'line',
+        data: {
+            labels: ymKeys,
+            datasets: [{
+                label: 'Ventas',
+                data: ymKeys.map(k => sumBy(byYM[k], 'valorRecaudado')),
+                borderColor: COLORS.verdeIntenso,
+                backgroundColor: 'rgba(56,142,60,.15)',
+                fill: true,
+                tension: .35,
+                borderWidth: 2,
+                pointRadius: 5,
+                pointBackgroundColor: COLORS.verdeIntenso,
+                datalabels: { display: true, align: 'top', color: '#fff',
+                    font: { size: 9, weight: '600' }, formatter: v => fmtVal(v),
+                    backgroundColor: 'rgba(27,94,32,0.85)',
+                    borderRadius: 3, padding: 3 }
+            }]
+        },
+        options: { ...optsT, plugins: { ...optsT.plugins, yearDivider: true, legend: { display: false } } }
+    });
+    const byProd = Object.entries(groupBy(ventas, 'nombreProducto')).map(([k, v]) => ({ k: k || '(sin nombre)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v).slice(0, 10);
+    const optsP = baseOptsH('Producto', 'Valor Recaudado');
+    makeChart('ch-v-prod', { type: 'bar', data: { labels: byProd.map(x => x.k.length > 25 ? x.k.substring(0, 25) + '...' : x.k), datasets: [{ label: 'Ventas', data: byProd.map(x => x.v), backgroundColor: greenGradient(byProd.length), borderRadius: 4 }] }, options: optsP });
+    const byReg = Object.entries(groupBy(ventas, 'regional')).map(([k, v]) => ({ k: k || '(sin regional)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+    const optsR = baseOpts('Valor Recaudado', 'Regional');
+    const gradReg = greenGradient(byReg.length);
+    makeChart('ch-v-reg', { type: 'bar', data: { labels: byReg.map(x => x.k), datasets: [{ label: 'Ventas', data: byReg.map(x => x.v), backgroundColor: gradReg, borderRadius: 4 }] }, options: { ...optsR, plugins: { ...optsR.plugins, legend: { display: false }, yearLabels: false, datalabels: { display: true, align: 'top', color: '#fff', font: { size: 9, weight: '600' }, formatter: v => fmtVal(v), backgroundColor: 'rgba(27,94,32,0.85)', borderRadius: 3, padding: 3 } } } });
+    const byOf = Object.entries(groupBy(ventas, 'nombreOficina')).map(([k, v]) => ({ k: k || '(sin oficina)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v).slice(0, 10);
+    const optsO = baseOptsH('Oficina', 'Valor Recaudado');
+    makeChart('ch-v-of', { type: 'bar', data: { labels: byOf.map(x => x.k.length > 20 ? x.k.substring(0, 20) + '...' : x.k), datasets: [{ label: 'Ventas', data: byOf.map(x => x.v), backgroundColor: greenGradient(byOf.length), borderRadius: 4 }] }, options: optsO });
+}
+        function renderDevolucionDetalle(drill) {
+            const { devoluciones } = getFiltered();
+            const filtered = devoluciones.filter(d => {
+                if (drill.aseguradora && d.aseguradora !== drill.aseguradora) return false;
+                if (drill.producto && (d.codProducto || d.producto) !== drill.producto) return false;
+                return true;
+            });
+            const byReg = groupBy(filtered, 'regional');
+            const rows = Object.keys(byReg).map(r => {
+                const v = byReg[r];
+                const val = sumBy(v, 'valor');
+                const count = v.length;
+                return { r: r || '(sin regional)', val, count };
+            }).sort((a, b) => b.val - a.val);
+            return `
+            <div class="drill-detail">
+                <h4><i class="fas fa-info-circle"></i> Detalle por Regional (${drill.aseguradora || ''} - ${drill.producto || ''})</h4>
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                        <tbody>
+                            ${rows.map(r => `<tr>
+                                <td style="text-align:left"><strong>${r.r}</strong></td>
+                                <td class="num">${fmtNum(r.count)}</td>
+                                <td class="num" style="color:var(--rojo)">${fmtMoney(r.val)}</td>
+                            </tr>`).join('')}
+                            ${rows.length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `;
+        }
+        function buildDevoTableByAseg(devoluciones, aseg) {
+            const filtered = devoluciones.filter(d => d.aseguradora === aseg);
+            const grouped = groupBy(filtered, 'regional');
+            const rows = Object.keys(grouped).map(r => {
+                const v = grouped[r];
+                return {
+                    regional: r || '(sin regional)',
+                    cantidad: v.length,
+                    valor: sumBy(v, 'valor')
+                };
+            }).sort((a, b) => b.valor - a.valor);
+            if (rows.length === 0) {
+                return '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin devoluciones</td></tr>';
+            }
+            return rows.slice(0, 50).map(r =>
+                `<tr class="clickable" data-aseg="${aseg}" data-reg="${r.regional.replace(/"/g, '&quot;')}">
+                <td style="text-align:left">${r.regional}</td>
+                <td class="num">${fmtNum(r.cantidad)}</td>
+                <td class="num" style="color:var(--rojo)">${fmtMoney(r.valor)}</td>
+            </tr>`
+            ).join('');
+        }
+        function renderDevoluciones() {
+            const { ventas, devoluciones } = getFiltered();
+            const trendData = getTrendFiltered();
+            const compData = getCompareData();
+            const m = metrics(ventas, devoluciones);
+            const mC = metrics(compData.ventas, compData.devoluciones);
+            const el = document.getElementById('page-devoluciones');
+            const dCompareDevo = {
+                devo: delta(m.totalDevo, mC.totalDevo),
+                polC: delta(m.polizasCancel, mC.polizasCancel),
+                tasa: delta(m.tasaCancel, mC.tasaCancel),
+                prom: delta(m.polizasCancel > 0 ? m.totalDevo / m.polizasCancel : 0, mC.polizasCancel > 0 ? mC.totalDevo / mC.polizasCancel : 0)
+            };
+            const devoGrouped = groupBy(devoluciones, d => `${d.codProducto || d.producto}|||${d.aseguradora}`);
+            const devoRows = Object.entries(devoGrouped).map(([k, v]) => {
+                const parts = k.split('|||');
+                let prodName = v[0] && v[0].producto ? v[0].producto : parts[0];
+                if (isNumericLabel(prodName) && STATE.prodNombreIdx && STATE.prodNombreIdx.has(parts[0])) {
+                    prodName = STATE.prodNombreIdx.get(parts[0]);
+                }
+                return {
+                    prodName: prodName || '(sin nombre)',
+                    codProd: parts[0] || '(sin cod)',
+                    aseguradora: parts[1] || '(sin aseguradora)',
+                    cantidad: v.length,
+                    valor: sumBy(v, 'valor')
+                };
+            }).sort((a, b) => b.valor - a.valor);
+            el.innerHTML = `
+            <div class="kpi-grid">
+                ${kpiCard('Total Devuelto', fmtMoney(m.totalDevo), dCompareDevo.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompareDevo.polC, compData.compareLabel, 'times-circle', 'danger')}
+                ${kpiCard('Tasa Cancelación', fmtPct(m.tasaCancel), dCompareDevo.tasa, compData.compareLabel, 'exclamation-triangle', m.tasaCancel > 15 ? 'danger' : m.tasaCancel > 8 ? 'warning' : 'success')}
+                ${kpiCard('Devolución Promedio', fmtMoney(m.polizasCancel > 0 ? m.totalDevo / m.polizasCancel : 0), dCompareDevo.prom, compData.compareLabel, 'calculator')}
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-area"></i>Tendencia mensual de cancelaciones</div></div>
+                    <div class="chart-wrap"><canvas id="ch-d-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Devoluciones por Aseguradora</div></div>
+                    <div class="chart-wrap"><canvas id="ch-d-aseg"></canvas></div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-map"></i>Cancelaciones por Regional</div></div>
+                    <div class="chart-wrap"><canvas id="ch-d-reg"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-building"></i>Cancelaciones por Oficina</div></div>
+                    <div class="chart-wrap"><canvas id="ch-d-of"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-box"></i>Productos con más cancelaciones</div></div>
+                <div class="chart-wrap"><canvas id="ch-d-prod"></canvas></div>
+            </div>
+            <div class="detalle-bloques">
+                <div class="bloque-aseguradora" style="border-top-color: ${COLORS.rojo}">
+                    <h3 style="color:var(--rojo)">CARDIF</h3>
+                    <div class="table-wrap">
+                        <table class="data" id="devo-table-cardif">
+                            <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                            <tbody>${buildDevoTableByAseg(devoluciones, 'CARDIF')}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bloque-aseguradora" style="border-top-color: ${COLORS.rojo}">
+                    <h3 style="color:var(--rojo)">MAPFRE</h3>
+                    <div class="table-wrap">
+                        <table class="data" id="devo-table-mapfre">
+                            <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                            <tbody>${buildDevoTableByAseg(devoluciones, 'MAPFRE')}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bloque-aseguradora" style="border-top-color: ${COLORS.rojo}">
+                    <h3 style="color:var(--rojo)">COLMENA</h3>
+                    <div class="table-wrap">
+                        <table class="data" id="devo-table-colmena">
+                            <thead><tr><th style="text-align:left">Regional</th><th class="num">Cantidad</th><th class="num">Valor</th></tr></thead>
+                            <tbody>${buildDevoTableByAseg(devoluciones, 'COLMENA')}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="devo-drill-container"></div>
+            `;
+            const cc = getChartColors();
+            const byYM = groupByYM(trendData.devoluciones);
+            const ymKeys = sortedYM(byYM);
+            const optsT = baseOpts('Valor Devuelto', 'Período (Mes-Año)');
+            fitChartWidth('ch-d-trend', ymKeys.length);
+            makeChart('ch-d-trend', {
+                type: 'line',
+                data: {
+                    labels: ymKeys,
+                    datasets: [{
+                        label: 'Valor Devuelto',
+                        data: ymKeys.map(k => sumBy(byYM[k], 'valor')),
+                        borderColor: COLORS.rojo,
+                        backgroundColor: 'rgba(211,47,47,.15)',
+                        fill: true,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: COLORS.rojo,
+                        yAxisID: 'y',
+                        datalabels: { display: true, align: 'top', color: '#fff',
+                            font: { size: 9, weight: '600' }, formatter: v =>
+                                fmtVal(v),
+                            backgroundColor: 'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3 }
+                    }, {
+                        label: 'Cantidad',
+                        data: ymKeys.map(k => (byYM[k] || []).length),
+                        borderColor: '#F43F5E',
+                        backgroundColor: 'rgba(244,63,94,.15)',
+                        fill: false,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#F43F5E',
+                        yAxisID: 'y1',
+                        datalabels: { display: true, align: 'bottom', color: '#fff',
+                            font: { size: 9, weight: '600' }, formatter: v =>
+                                fmtNum(v),
+                            backgroundColor: 'rgba(244,63,94,.85)',
+                            borderRadius: 3, padding: 3 }
+                    }]
+                },
+                options: {
+                    ...optsT,
+                    plugins: { ...optsT.plugins, yearDivider: true, legend: { display: true } },
+                    scales: {
+                        ...optsT.scales,
+                        y: { ...optsT.scales.y, position: 'left', title: { display: true,
+                                text: 'Valor Devuelto', color: cc.text,
+                                font: { size: 8, weight: '600' } } },
+                        y1: { position: 'right', title: { display: true,
+                                text: 'Cantidad', color: cc.text,
+                                font: { size: 8, weight: '600' } },
+                            ticks: { ...Y_TICKS, color: cc.text },
+                            grid: { display: false }, border: { color: cc.border } }
+                    }
+                }
+            });
+            const byAseg = Object.entries(groupBy(devoluciones, 'aseguradora')).map(([k, v]) => ({ k, v: sumBy(v,
+                'valor'), c: v.length }));
+            const optsA = baseOpts('Valor Devuelto', 'Aseguradora');
+            makeChart('ch-d-aseg', {
+                type: 'bar',
+                data: {
+                    labels: byAseg.map(x => x.k),
+                    datasets: [
+                        { label: 'Valor Devuelto', data: byAseg.map(x => x.v),
+                            backgroundColor: COLORS.rojo, borderRadius: 4,
+                        yAxisID: 'y' },
+                        { label: 'Cantidad', data: byAseg.map(x => x.c),
+                            backgroundColor: 'rgba(244,63,94,.35)', borderColor: '#F43F5E',
+                            borderWidth: 1, borderRadius: 4,
+                        yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    ...optsA,
+                    plugins: { ...optsA.plugins, legend: { display: true },
+                        yearLabels: false, datalabels: { display: true,
+                            align: 'top', color: '#fff',
+                            font: { size: 9, weight: '600' },
+                            formatter: (v, ctx) => ctx.datasetIndex === 0 ?
+                                fmtVal(v) : fmtNum(v),
+                            backgroundColor: ctx => ctx.datasetIndex === 0 ?
+                                'rgba(211,47,47,0.85)' :
+                                'rgba(244,63,94,0.85)',
+                            borderRadius: 3, padding: 3 } },
+                    scales: {
+                        ...optsA.scales,
+                        y: { ...optsA.scales.y, position: 'left', title: { display: true,
+                                text: 'Valor Devuelto', color: cc.text,
+                                font: { size: 8, weight: '600' } } },
+                        y1: { position: 'right', title: { display: true,
+                                text: 'Cantidad', color: cc.text,
+                                font: { size: 8, weight: '600' } },
+                            ticks: { ...Y_TICKS, color: cc.text },
+                            grid: { display: false }, border: { color: cc.border } }
+                    }
+                }
+            });
+            const byReg = Object.entries(groupBy(devoluciones, 'regional')).map(([k, v]) => ({ k: k ||
+                    '(sin regional)', v: sumBy(v, 'valor'), c: v.length })).sort((a, b) => b.v - a.v);
+            const optsR = baseOpts('Valor Devuelto', 'Regional');
+            makeChart('ch-d-reg', { type: 'bar', data: { labels: byReg.map(x => x.k),
+                    datasets: [{ label: 'Devoluciones', data: byReg.map(x => x.v),
+                        backgroundColor: COLORS.rojo, borderRadius: 4 }] },
+                options: { ...optsR, plugins: { ...optsR.plugins, legend: { display: false },
+                        yearLabels: false, datalabels: { display: true, align: 'top',
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3 } } } });
+            const byOf = Object.entries(groupBy(devoluciones, 'oficina')).map(([k, v]) => {
+                let nombre = k;
+                if (isNumericLabel(nombre) && STATE.ofiNombreIdx && v[0].codOficina && STATE.ofiNombreIdx.has(normCode(v[0].codOficina))) {
+                    nombre = STATE.ofiNombreIdx.get(normCode(v[0].codOficina));
+                }
+                return { k: nombre || '(sin oficina)', v: sumBy(v, 'valor'), c: v.length };
+            }).sort((a, b) => b.v - a.v).slice(0, 10);
+            const optsO = baseOptsH('Oficina', 'Valor Devuelto');
+            makeChart('ch-d-of', { type: 'bar', data: { labels: byOf.map(x => x.k), datasets: [{ label: 'Devoluciones',
+                    data: byOf.map(x => x.v), backgroundColor: COLORS.rojo,
+                       borderRadius: 4 }] }, options: { ...optsO, plugins: { ...optsO.plugins,
+                    datalabels: { ...optsO.plugins.datalabels, backgroundColor: 'rgba(211,47,47,0.85)' } } } });
+            const byProd = devoRows.slice(0, 10);
+            const optsPr = baseOptsH('Producto', 'Valor Devuelto');
+            makeChart('ch-d-prod', { type: 'bar', data: { labels: byProd.map(x => x.prodName),
+                    datasets: [{ label: 'Devoluciones', data: byProd.map(x => x.valor),
+            backgroundColor: COLORS.rojo, borderRadius: 4 }] },
+            options: { ...optsPr, plugins: { ...optsPr.plugins, datalabels: { ...optsPr.plugins.datalabels,
+            backgroundColor: 'rgba(211,47,47,0.85)' } } } });
+            document.querySelectorAll('#page-devoluciones .clickable').forEach(tr => {
+                tr.addEventListener('click', () => {
+                    STATE.devoDrill = { aseguradora: tr.dataset.aseg, producto: tr.dataset
+                            .prod };
+                    document.getElementById('devo-drill-container').innerHTML =
+                        renderDevolucionDetalle(STATE.devoDrill);
+                });
+            });
+        }
+        function renderComisiones() {
+            const { ventas, devoluciones } = getFiltered();
+            const m = metrics(ventas, devoluciones);
+            const compData = getCompareData();
+            const mC = metrics(compData.ventas, compData.devoluciones);
+            const rentC = mC.totalVentas > 0 ? (mC.retorno / mC.totalVentas) * 100 : 0;
+            const dCompareCom = {
+                comBruta: delta(m.comBruta, mC.comBruta),
+                comDevo: delta(m.comDevo, mC.comDevo),
+                comNeta: delta(m.comNeta, mC.comNeta),
+                ivaBruto: delta(m.ivaBruto, mC.ivaBruto),
+                ivaDevo: delta(m.ivaDevo, mC.ivaDevo),
+                ivaNeto: delta(m.ivaNeto, mC.ivaNeto),
+                retorno: delta(m.retorno, mC.retorno),
+                rent: delta(m.totalVentas > 0 ? (m.retorno / m.totalVentas) * 100 : 0, rentC)
+            };
+            const el = document.getElementById('page-comisiones');
+            el.innerHTML = `
+            <div class="kpi-grid">
+                ${kpiCard('Comisión Bruta', fmtMoney(m.comBruta), dCompareCom.comBruta, compData.compareLabel, 'coins')}
+                ${kpiCard('Comisión Devuelta', fmtMoney(m.comDevo), dCompareCom.comDevo, compData.compareLabel, 'undo', 'danger')}
+                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompareCom.comNeta, compData.compareLabel, 'money-check', 'success')}
+                ${kpiCard('IVA Bruto', fmtMoney(m.ivaBruto), dCompareCom.ivaBruto, compData.compareLabel, 'percent')}
+                ${kpiCard('IVA Devuelto', fmtMoney(m.ivaDevo), dCompareCom.ivaDevo, compData.compareLabel, 'undo', 'danger')}
+                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompareCom.ivaNeto, compData.compareLabel, 'percent')}
+                ${kpiCard('Retorno Total', fmtMoney(m.retorno), dCompareCom.retorno, compData.compareLabel, 'money-check-alt', 'success')}
+                ${kpiCard('Rentabilidad', fmtPct(m.totalVentas > 0 ? (m.retorno / m.totalVentas) * 100 : 0), dCompareCom.rent, compData.compareLabel, 'chart-pie', m.retorno > 0 ? 'success' : 'danger')}
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Evolución mensual de comisiones</div></div>
+                    <div class="chart-wrap"><canvas id="ch-c-trend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Comisión neta por Aseguradora</div></div>
+                    <div class="chart-wrap"><canvas id="ch-c-aseg"></canvas></div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-map"></i>Comisión por Regional</div></div>
+                    <div class="chart-wrap"><canvas id="ch-c-reg"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-box"></i>Comisión por Producto</div></div>
+                    <div class="chart-wrap"><canvas id="ch-c-prod"></canvas></div>
+                </div>
+            </div>
+            `;
+            const cc = getChartColors();
+            const trendData = getTrendFiltered();
+            const byMonth = groupByYM(trendData.ventas);
+            const byMonthD = groupByYM(trendData.devoluciones);
+            const ymKeys = [...new Set([...Object.keys(byMonth), ...Object.keys(byMonthD)])].sort();
+            const dCom = ymKeys.map(k => sumBy(byMonth[k] || [], 'comision') - sumBy(byMonthD[k] || [],
+            'comision'));
+            const dIva = ymKeys.map(k => sumBy(byMonth[k] || [], 'ivaComision') - sumBy(byMonthD[k] || [],
+            'iva'));
+            const optsT = baseOpts('Comisión / IVA', 'Período (Mes-Año)');
+            fitChartWidth('ch-c-trend', ymKeys.length);
+            makeChart('ch-c-trend', {
+                type: 'line',
+                data: {
+                    labels: ymKeys,
+                    datasets: [{
+                        label: 'Comisión Neta',
+                        data: dCom,
+                        borderColor: COLORS.verdeIntenso,
+                        backgroundColor: 'rgba(56,142,60,.15)',
+                        fill: true,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: COLORS.verdeIntenso,
+                        datalabels: { display: true, align: 'top', anchor: 'end',
+                            offset: 4, color: '#fff', font: { size: 9,
+                                weight: '600' }, formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(27,94,32,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }, {
+                        label: 'IVA Neto',
+                        data: dIva,
+                        borderColor: COLORS.verdeBosque,
+                        backgroundColor: 'rgba(165,214,167,.15)',
+                        fill: true,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: COLORS.verdeClaro,
+                        datalabels: { display: true, align: 'top',
+                            anchor: 'end', offset: 4, color: COLORS.verdePetroleo,
+                            font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(165,214,167,0.9)',
+                            borderRadius: 3, padding: 3 }
+                    }]
+                },
+                options: { ...optsT, plugins: { ...optsT.plugins, yearDivider: true } }
+            });
+            const byAseg = Object.entries(groupBy(ventas, 'aseguradora')).map(([k, v]) => {
+                const dv = devoluciones.filter(d => (d.aseguradoraVenta || d.aseguradora) === k);
+                return { k, com: sumBy(v, 'comision') - sumBy(dv, 'comision'), iva: sumBy(v,
+                        'ivaComision') - sumBy(dv, 'iva') };
+            });
+            const optsA = baseOpts('Valor', 'Aseguradora');
+            makeChart('ch-c-aseg', { type: 'bar', data: { labels: byAseg.map(x => x.k),
+                    datasets: [{ label: 'Comisión Neta', data: byAseg.map(x => x.com),
+                            backgroundColor: COLORS.verdePetroleo, borderRadius: 4 },
+                        { label: 'IVA Neto', data: byAseg.map(x => x.iva),
+                            backgroundColor: COLORS.verdeClaro, borderRadius: 4 }
+                    ] },
+                options: { ...optsA, plugins: { ...optsA.plugins, yearLabels: false,
+                    datalabels: { display: true, align: 'top',
+                       color: ctx => ctx.datasetIndex === 0 ? '#fff' : COLORS.verdePetroleo,
+                       font: { size: 9, weight: '600' }, formatter: v =>
+                           fmtVal(v),
+                       backgroundColor: ctx => ctx.datasetIndex === 0 ?
+                         'rgba(27,94,32,0.85)' : 'rgba(165,214,167,0.9)',
+                       borderRadius: 3, padding: 3 } } } });
+            const byReg = Object.entries(groupBy(ventas, 'regional')).map(([k, v]) => {
+                const dv = devoluciones.filter(d => d.regional === k);
+                return { k: k || '(sin regional)', com: sumBy(v, 'comision') - sumBy(dv,
+                    'comision') };
+            }).sort((a, b) => b.com - a.com);
+            const optsR = baseOpts('Comisión Neta', 'Regional');
+            const gradReg = greenGradient(byReg.length);
+            makeChart('ch-c-reg', { type: 'bar', data: { labels: byReg.map(x => x.k),
+                    datasets: [{ label: 'Comisión Neta', data: byReg.map(x => x.com),
+                        backgroundColor: gradReg, borderRadius: 4 }] },
+                options: { ...optsR, plugins: { ...optsR.plugins, legend: { display: false },
+                        yearLabels: false, datalabels: { display: true, align: 'top',
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(27,94,32,0.85)',
+                            borderRadius: 3, padding: 3 } } } });
+            const byProd = Object.entries(groupBy(ventas, 'nombreProducto')).map(([k, v]) => {
+                const dv = devoluciones.filter(d => d.producto === k);
+                return { k: k || '(sin nombre)', com: sumBy(v, 'comision') - sumBy(dv,
+                    'comision') };
+            }).sort((a, b) => b.com - a.com).slice(0, 10);
+            const optsP = baseOptsH('Producto', 'Comisión Neta');
+            makeChart('ch-c-prod', { type: 'bar', data: { labels: byProd.map(x => x.k.length > 25 ? x.k
+                        .substring(0, 25) + '...' : x.k), datasets: [{ label: 'Comisión Neta',
+                        data: byProd.map(x => x.com), backgroundColor: greenGradient(byProd.length),
+                        borderRadius: 4 }] }, options: optsP });
+        }
+        function renderAseguradoras() {
+            const { ventas, devoluciones } = getFiltered();
+            const byAseg = Object.entries(groupBy(ventas, 'aseguradora')).map(([k, v]) => {
+                const dv = devoluciones.filter(d => (d.aseguradoraVenta || d.aseguradora) === k);
+                const vt = sumBy(v, 'valorRecaudado');
+                const dvt = sumBy(dv, 'valor');
+                const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+                const iva = sumBy(v, 'ivaComision') - sumBy(dv, 'iva');
+                return { k, vt, dvt, net: vt - dvt, pol: v.length, polC: dv.length, tasa: vt > 0 ? (
+                        dvt / vt) * 100 : 0, com, iva, ret: com + iva, rent: vt > 0 ? ((com +
+                        iva) / vt) * 100 : 0 };
+            });
+            const total = byAseg.reduce((a, b) => ({ vt: a.vt + b.vt, net: a.net + b.net, pol: a.pol + b
+                .pol }), { vt: 0, net: 0, pol: 0 });
+            const el = document.getElementById('page-aseguradoras');
+            el.innerHTML = `
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Comparativo de Aseguradoras</div></div>
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead><tr><th style="text-align:left">Aseguradora</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">Part.</th><th class="pct">% Cancel.</th><th class="num">Com. Neta</th><th class="num">IVA Neto</th><th class="num">Retorno</th><th class="pct">Rent.</th></tr></thead>
+                        <tbody>
+                            ${byAseg.map(a => `<tr>
+                                <td style="text-align:left"><strong style="color:${a.k === 'CARDIF' ? COLORS.verdePetroleo : a.k === 'MAPFRE' ? COLORS.verdeMedio : a.k === 'COLMENA' ? COLORS.verdeClaro : COLORS.verdeIntenso}">${a.k}</strong></td>
+                                <td class="num">${fmtMoney(a.vt)}</td>
+                                <td class="num" style="color:var(--rojo)">${fmtMoney(a.dvt)}</td>
+                                <td class="num" style="color:var(--verde-intenso)">${fmtMoney(a.net)}</td>
+                                <td class="num">${fmtNum(a.pol)}</td>
+                                <td class="pct">${fmtPct(total.vt > 0 ? (a.vt / total.vt) * 100 : 0)}</td>
+                                <td class="pct">${fmtPct(a.tasa)}</td>
+                                <td class="num">${fmtMoney(a.com)}</td>
+                                <td class="num">${fmtMoney(a.iva)}</td>
+                                <td class="num">${fmtMoney(a.ret)}</td>
+                                <td class="pct">${fmtPct(a.rent)}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-pie"></i>Participación en ventas</div></div>
+                    <div class="chart-wrap sm"><canvas id="ch-a-part"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-balance-scale"></i>Ventas vs Devoluciones</div></div>
+                    <div class="chart-wrap sm"><canvas id="ch-a-vs"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-bar"></i>Retorno por Aseguradora</div></div>
+                <div class="chart-wrap"><canvas id="ch-a-ret"></canvas></div>
+            </div>
+            `;
+            const cc = getChartColors();
+            makeChart('ch-a-part', { type: 'doughnut', data: { labels: byAseg.map(x => x.k),
+                    datasets: [{ data: byAseg.map(x => x.vt),
+                        backgroundColor: [COLORS.verdePetroleo, COLORS.verdeMedio,
+                            COLORS.verdeClaro
+                        ], borderWidth: 2, borderColor: cc.pieBorder }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { datalabels: { display: true, formatter: (value,
+                            context) => { const t = context.dataset.data.reduce((
+                                a, b) => a + b, 0); return t > 0 ? fmtPct((
+                                value / t) * 100) : '0%' }, color: '#fff',
+                            font: { size: 12, weight: '700' },
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            borderRadius: 4, padding: 4 }, title: { display: true,
+                            text: 'Aseguradora', color: cc.text,
+                            font: { size: 11, weight: '600' } } } } });
+            const optsV = baseOpts('Valor', 'Aseguradora');
+            makeChart('ch-a-vs', { type: 'bar', data: { labels: byAseg.map(x => x.k),
+                    datasets: [{ label: 'Ventas', data: byAseg.map(x => x.vt),
+                            backgroundColor: COLORS.verdeIntenso, borderRadius: 4 },
+                        { label: 'Devoluciones', data: byAseg.map(x => x.dvt),
+                            backgroundColor: COLORS.rojo, borderRadius: 4 }
+                    ] },
+                options: { ...optsV, plugins: { ...optsV.plugins, yearLabels: false,
+                        datalabels: { display: true, align: 'top', color: '#fff',
+                            font: { size: 9, weight: '600' }, formatter: v =>
+                                fmtVal(v),
+                            backgroundColor: ctx => ctx.datasetIndex === 0 ?
+                                'rgba(27,94,32,0.85)' :
+                                'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3 } } } });
+            const optsR = baseOpts('Valor', 'Aseguradora');
+            makeChart('ch-a-ret', { type: 'bar', data: { labels: byAseg.map(x => x.k),
+                    datasets: [{ label: 'Comisión Neta', data: byAseg.map(x => x.com),
+                            backgroundColor: COLORS.verdePetroleo, borderRadius: 4 },
+                        { label: 'IVA Neto', data: byAseg.map(x => x.iva),
+                            backgroundColor: COLORS.verdeClaro, borderRadius: 4 }
+                    ] },
+                options: { ...optsR, plugins: { ...optsR.plugins, yearLabels: false,
+                        datalabels: { display: true, align: 'top',
+                            color: ctx => ctx.datasetIndex === 0 ? '#fff' : COLORS.verdePetroleo,
+                            font: { size: 9, weight: '600' }, formatter: v =>
+                                fmtVal(v),
+                            backgroundColor: ctx => ctx.datasetIndex === 0 ?
+                                'rgba(27,94,32,0.85)' : 'rgba(165,214,167,0.9)',
+                            borderRadius: 3, padding: 3 } } } });
+        }
+        function renderProductos() {
+            const { ventas, devoluciones } = getFiltered();
+            const byProd = Object.entries(groupBy(ventas, 'nombreProducto')).map(([k, v]) => {
+                const dv = devoluciones.filter(d => d.producto === k);
+                const vt = sumBy(v, 'valorRecaudado');
+                const dvt = sumBy(dv, 'valor');
+                const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+                return { k: k || '(sin nombre)', vt, dvt, net: vt - dvt, pol: v.length, polC: dv
+                        .length, tasa: vt > 0 ? (dvt / vt) * 100 : 0, com, rent: vt > 0 ? (
+                        com / vt) * 100 : 0 };
+            });
+            const top = byProd.slice().sort((a, b) => b.vt - a.vt).slice(0, 10);
+            const worst = byProd.slice().sort((a, b) => b.tasa - a.tasa).slice(0, 10);
+            const bestRent = byProd.filter(p => p.pol >= 3).slice().sort((a, b) => b.rent - a.rent).slice(0, 10);
+            const el = document.getElementById('page-productos');
+            el.innerHTML = `
+            <div class="tabs">
+                <div class="tab active" data-tab="top">Top 10 por Ventas</div>
+                <div class="tab" data-tab="cancel">Mayor Cancelación</div>
+                <div class="tab" data-tab="rent">Mejor Rentabilidad</div>
+                <div class="tab" data-tab="all">Todos los Productos</div>
+            </div>
+            <div class="tab-content active" data-tab="top">
+                <div class="panel">
+                    <div class="chart-wrap lg"><canvas id="ch-p-top"></canvas></div>
+                </div>
+            </div>
+            <div class="tab-content" data-tab="cancel">
+                <div class="panel">
+                    <div class="chart-wrap lg"><canvas id="ch-p-cancel"></canvas></div>
+                </div>
+            </div>
+            <div class="tab-content" data-tab="rent">
+                <div class="panel">
+                    <div class="chart-wrap lg"><canvas id="ch-p-rent"></canvas></div>
+                </div>
+            </div>
+            <div class="tab-content" data-tab="all">
+                <div class="panel">
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead><tr><th style="text-align:left">Producto</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">% Cancel.</th><th class="num">Com. Neta</th><th class="pct">Rent.</th></tr></thead>
+                            <tbody>
+                                ${byProd.sort((a, b) => b.vt - a.vt).map(p => `<tr>
+                                    <td style="text-align:left"><strong>${p.k}</strong></td>
+                                    <td class="num">${fmtMoney(p.vt)}</td>
+                                    <td class="num" style="color:var(--rojo)">${fmtMoney(p.dvt)}</td>
+                                    <td class="num" style="color:var(--verde-intenso)">${fmtMoney(p.net)}</td>
+                                    <td class="num">${fmtNum(p.pol)}</td>
+                                    <td class="pct">${fmtPct(p.tasa)}</td>
+                                    <td class="num">${fmtMoney(p.com)}</td>
+                                    <td class="pct">${fmtPct(p.rent)}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.querySelectorAll('#page-productos .tab').forEach(t => {
+                t.addEventListener('click', () => {
+                    document.querySelectorAll('#page-productos .tab').forEach(x => x.classList
+                        .remove('active'));
+                    document.querySelectorAll('#page-productos .tab-content').forEach(x => x
+                        .classList.remove('active'));
+                    t.classList.add('active');
+                    document.querySelector(
+                        `#page-productos .tab-content[data-tab="${t.dataset.tab}"]`)
+                        .classList.add('active');
+                });
+            });
+            renderProdCharts(top, worst, bestRent);
+        }
+        function renderProdCharts(top, worst, bestRent) {
+            const optsT = baseOptsH('Producto', 'Valor Recaudado');
+            makeChart('ch-p-top', { type: 'bar', data: { labels: top.map(x => x.k.length > 30 ? x.k
+                        .substring(0, 30) + '...' : x.k), datasets: [{ label: 'Ventas',
+                        data: top.map(x => x.vt), backgroundColor: greenGradient(top.length),
+                        borderRadius: 4 }] }, options: optsT });
+            const optsC = baseOptsHPct('Producto', 'Tasa %');
+            makeChart('ch-p-cancel', { type: 'bar', data: { labels: worst.map(x => x.k.length > 30 ?
+                        x.k.substring(0, 30) + '...' : x.k), datasets: [{ label: 'Tasa Cancelación %',
+                        data: worst.map(x => x.tasa), backgroundColor: redGradient(worst.length),
+                        borderRadius: 4 }] }, options: optsC });
+            const optsR = baseOptsHPct('Producto', 'Rentabilidad %');
+            makeChart('ch-p-rent', { type: 'bar', data: { labels: bestRent.map(x => x.k.length > 30 ?
+                        x.k.substring(0, 30) + '...' : x.k), datasets: [{ label: 'Rentabilidad %',
+                        data: bestRent.map(x => x.rent), backgroundColor: COLORS.verdeMedio,
+                        borderRadius: 4 }] }, options: optsR });
+        }
+function renderOficinas() {
+    const { ventas, devoluciones } = getFiltered();
+    const byOf = Object.entries(groupBy(ventas, 'nombreOficina')).map(([k, v]) => {
+        const dv = devoluciones.filter(d => d.oficina === k);
+        const vt = sumBy(v, 'valorRecaudado');
+        const dvt = sumBy(dv, 'valor');
+        const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+        const r = v[0].regional || '';
+        const z = v[0].zonal || '';
+        return { k: k || '(sin oficina)', r, z, vt, dvt, net: vt - dvt, pol: v.length,
+            polC: dv.length, tasa: vt > 0 ? (dvt / vt) * 100 : 0, com };
+    });
+    const top = byOf.slice().sort((a, b) => b.vt - a.vt).slice(0, 10);
+    const worst = byOf.filter(x => x.pol >= 3).slice().sort((a, b) => b.tasa - a.tasa).slice(0, 10);
+    const el = document.getElementById('page-oficinas');
+    el.innerHTML = `
+    <div class="tabs">
+        <div class="tab active" data-tab="top">Top 10 por Ventas</div>
+        <div class="tab" data-tab="worst">Mayor Cancelación</div>
+        <div class="tab" data-tab="heat">Mapa de Calor</div>
+        <div class="tab" data-tab="all">Todas las Oficinas</div>
+    </div>
+    <div class="tab-content active" data-tab="top">
+        <div class="panel"><div class="chart-wrap lg"><canvas id="ch-o-top"></canvas></div></div>
+    </div>
+    <div class="tab-content" data-tab="worst">
+        <div class="panel"><div class="chart-wrap lg"><canvas id="ch-o-worst"></canvas></div></div>
+    </div>
+    <div class="tab-content" data-tab="heat">
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-th"></i>Heatmap por Regional</div></div>
+            <div id="o-heat"></div>
+        </div>
+    </div>
+    <div class="tab-content" data-tab="all">
+        <div class="panel">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Oficina</th><th style="text-align:left">Regional</th><th style="text-align:left">Zonal</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">% Cancel.</th><th class="num">Com. Neta</th></tr></thead>
+                    <tbody>
+                        ${byOf.sort((a, b) => b.vt - a.vt).map(o => `<tr>
+                            <td style="text-align:left"><strong>${o.k}</strong></td>
+                            <td style="text-align:left">${o.r}</td>
+                            <td style="text-align:left">${o.z}</td>
+                            <td class="num">${fmtMoney(o.vt)}</td>
+                            <td class="num" style="color:var(--rojo)">${fmtMoney(o.dvt)}</td>
+                            <td class="num" style="color:var(--verde-intenso)">${fmtMoney(o.net)}</td>
+                            <td class="num">${fmtNum(o.pol)}</td>
+                            <td class="pct">${fmtPct(o.tasa)}</td>
+                            <td class="num">${fmtMoney(o.com)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    `;
+    document.querySelectorAll('#page-oficinas .tab').forEach(t => {
+        t.addEventListener('click', () => {
+            document.querySelectorAll('#page-oficinas .tab').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('#page-oficinas .tab-content').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            document.querySelector(`#page-oficinas .tab-content[data-tab="${t.dataset.tab}"]`).classList.add('active');
+        });
+    });
+    const optsT = baseOptsH('Oficina', 'Valor Recaudado');
+    makeChart('ch-o-top', { type: 'bar', data: { labels: top.map(x => x.k.length > 25 ? x.k.substring(0, 25) + '...' : x.k), datasets: [{ label: 'Ventas', data: top.map(x => x.vt), backgroundColor: greenGradient(top.length), borderRadius: 4 }] }, options: optsT });
+    const optsW = baseOptsHPct('Oficina', 'Tasa %');
+    makeChart('ch-o-worst', { type: 'bar', data: { labels: worst.map(x => x.k.length > 25 ? x.k.substring(0, 25) + '...' : x.k), datasets: [{ label: 'Tasa Cancelación %', data: worst.map(x => x.tasa), backgroundColor: redGradient(worst.length), borderRadius: 4 }] }, options: optsW });
+    const byReg = Object.entries(groupBy(ventas, 'regional')).map(([k, v]) => ({ k: k || '(sin regional)', v: sumBy(v, 'valorRecaudado'), c: v.length })).sort((a, b) => b.v - a.v);
+    const maxV = Math.max(...byReg.map(x => x.v), 0);
+    document.getElementById('o-heat').innerHTML = byReg.length === 0 ?
+        `<div class="empty"><i class="fas fa-th"></i><h3>Sin datos</h3></div>` :
+        `<div class="heatmap">${byReg.map(r => {
+        const intensity = maxV > 0 ? r.v / maxV : 0;
+        const bg = `rgba(56,142,60,${0.15 + intensity * 0.7})`;
+        return `<div class="heat-cell" style="background:${bg}">
+            <div class="name">${r.k}</div>
+            <div class="val">${fmtMoney(r.v)}</div>
+            <div class="sub">${fmtNum(r.c)} pólizas</div>
+        </div>`;
+    }).join('')}</div>`;
+}
+function renderRegionales() {
+    const { ventas, devoluciones } = getFiltered();
+    const el = document.getElementById('page-regionales');
+    const d = STATE.drill;
+    const compData = getCompareData();
+    const kpiRow = (mCur, mComp) => {
+        const dv = {
+            vt: delta(mCur.totalVentas, mComp.totalVentas),
+            dv: delta(mCur.totalDevo, mComp.totalDevo),
+            net: delta(mCur.netas, mComp.netas),
+            pol: delta(mCur.polizas, mComp.polizas),
+            com: delta(mCur.comNeta, mComp.comNeta),
+            tasa: delta(mCur.tasaCancel, mComp.tasaCancel)
+        };
+        return `
+        <div class="kpi-grid">
+            ${kpiCard('Ventas', fmtMoney(mCur.totalVentas), dv.vt, compData.compareLabel, 'hand-holding-usd', 'success')}
+            ${kpiCard('Devoluciones', fmtMoney(mCur.totalDevo), dv.dv, compData.compareLabel, 'undo', 'danger')}
+            ${kpiCard('Netas', fmtMoney(mCur.netas), dv.net, compData.compareLabel, 'wallet')}
+            ${kpiCard('Pólizas', fmtNum(mCur.polizas), dv.pol, compData.compareLabel, 'file-contract')}
+            ${kpiCard('Comisión Neta', fmtMoney(mCur.comNeta), dv.com, compData.compareLabel, 'coins', 'success')}
+            ${kpiCard('Tasa Cancel.', fmtPct(mCur.tasaCancel), dv.tasa, compData.compareLabel, 'exclamation-triangle', mCur.tasaCancel > 15 ? 'danger' : 'success')}
+        </div>`;
+    };
+    let breadcrumb = '<span data-level="root" class="' + (d.regional ? '' : 'current') + '">Todas las Regionales</span>';
+    if (d.regional) {
+        breadcrumb += '<i class="fas fa-chevron-right"></i><span data-level="regional" class="' + (d.zonal ? '' : 'current') + '">' + d.regional + '</span>';
+        if (d.zonal) {
+            breadcrumb += '<i class="fas fa-chevron-right"></i><span data-level="zonal" class="' + (d.oficina ? '' : 'current') + '">' + d.zonal + '</span>';
+            if (d.oficina) {
+                breadcrumb += '<i class="fas fa-chevron-right"></i><span class="current">' + d.oficina + '</span>';
+            }
+        }
+    }
+    let content = '';
+    if (!d.regional) {
+        const byReg = groupBy(ventas, 'regional');
+        const devoByReg = groupBy(devoluciones, 'regional');
+        const rows = Object.keys(byReg).map(r => {
+            const v = byReg[r], dv = devoByReg[r] || [];
+            const vt = sumBy(v, 'valorRecaudado'), dvt = sumBy(dv, 'valor');
+            const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+            const iva = sumBy(v, 'ivaComision') - sumBy(dv, 'iva');
+            return { reg: r || '(sin regional)', vt, dvt, net: vt - dvt, pol: v.length, polC: dv.length, tasa: vt > 0 ? (dvt / vt) * 100 : 0, com, iva, ret: com + iva };
+        }).sort((a, b) => b.vt - a.vt);
+        const mRoot = metrics(ventas, devoluciones);
+        const mRootC = metrics(compData.ventas, compData.devoluciones);
+        content = rows.length === 0 ?
+            `<div class="empty"><i class="fas fa-map-marked-alt"></i><h3>Sin datos</h3><p>No hay regionales para los filtros seleccionados.</p></div>` :
+            `
+        ${kpiRow(mRoot, mRootC)}
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-map-marked-alt"></i>Regionales <small>Click para drill-down</small></div></div>
+            <div class="chart-wrap lg"><canvas id="ch-r-bar"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Regional</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="num">Retorno</th><th class="pct">% Cancel.</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        ${rows.map(r => `<tr class="clickable" data-reg="${r.reg.replace(/"/g, '&quot;')}">
+                            <td style="text-align:left"><strong>${r.reg}</strong></td>
+                            <td class="num">${fmtMoney(r.vt)}</td>
+                            <td class="num" style="color:var(--rojo)">${fmtMoney(r.dvt)}</td>
+                            <td class="num" style="color:var(--verde-intenso)">${fmtMoney(r.net)}</td>
+                            <td class="num">${fmtNum(r.pol)}</td>
+                            <td class="num">${fmtMoney(r.ret)}</td>
+                            <td class="pct">${fmtPct(r.tasa)}</td>
+                            <td>${r.tasa > 20 ? '<span class="tag bad">Riesgo</span>' : r.tasa > 10 ? '<span class="tag warn">Alerta</span>' : '<span class="tag ok">Excelente</span>'}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        `;
+    } else if (!d.zonal) {
+        const vReg = ventas.filter(v => v.regional === d.regional);
+        const dReg = devoluciones.filter(v => v.regional === d.regional);
+        const byZ = groupBy(vReg, 'zonal');
+        const dByZ = groupBy(dReg, 'zonal');
+        const rows = Object.keys(byZ).map(z => {
+            const v = byZ[z], dv = dByZ[z] || [];
+            const vt = sumBy(v, 'valorRecaudado'), dvt = sumBy(dv, 'valor');
+            const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+            return { z: z || '(sin zonal)', vt, dvt, net: vt - dvt, pol: v.length, tasa: vt > 0 ? (dvt / vt) * 100 : 0, com };
+        }).sort((a, b) => b.vt - a.vt);
+        const compVReg = compData.ventas.filter(v => v.regional === d.regional);
+        const compDReg = compData.devoluciones.filter(v => v.regional === d.regional);
+        const mZon = metrics(vReg, dReg);
+        const mZonC = metrics(compVReg, compDReg);
+        content = `
+        ${kpiRow(mZon, mZonC)}
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-layer-group"></i>Zonales de ${d.regional}</div></div>
+            <div class="chart-wrap"><canvas id="ch-r-z"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Zonal</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">% Cancel.</th><th class="num">Com. Neta</th></tr></thead>
+                    <tbody>
+                        ${rows.map(r => `<tr class="clickable" data-zonal="${r.z.replace(/"/g, '&quot;')}">
+                            <td style="text-align:left"><strong>${r.z}</strong></td>
+                            <td class="num">${fmtMoney(r.vt)}</td>
+                            <td class="num" style="color:var(--rojo)">${fmtMoney(r.dvt)}</td>
+                            <td class="num" style="color:var(--verde-intenso)">${fmtMoney(r.net)}</td>
+                            <td class="num">${fmtNum(r.pol)}</td>
+                            <td class="pct">${fmtPct(r.tasa)}</td>
+                            <td class="num">${fmtMoney(r.com)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        `;
+    } else if (!d.oficina) {
+        const vZ = ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal);
+        const dZ = devoluciones.filter(v => v.regional === d.regional && v.zonal === d.zonal);
+        const byO = groupBy(vZ, 'nombreOficina');
+        const dByO = groupBy(dZ, 'oficina');
+        const rows = Object.keys(byO).map(o => {
+            const v = byO[o], dv = dByO[o] || [];
+            const vt = sumBy(v, 'valorRecaudado'), dvt = sumBy(dv, 'valor');
+            const com = sumBy(v, 'comision') - sumBy(dv, 'comision');
+            return { o: o || '(sin oficina)', vt, dvt, net: vt - dvt, pol: v.length, tasa: vt > 0 ? (dvt / vt) * 100 : 0, com };
+        }).sort((a, b) => b.vt - a.vt);
+        const compVZ = compData.ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal);
+        const compDZ = compData.devoluciones.filter(v => v.regional === d.regional && v.zonal === d.zonal);
+        const mOfL = metrics(vZ, dZ);
+        const mOfLC = metrics(compVZ, compDZ);
+        content = `
+        ${kpiRow(mOfL, mOfLC)}
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-building"></i>Oficinas de ${d.zonal} (${d.regional})</div></div>
+            <div class="chart-wrap"><canvas id="ch-r-o"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="table-wrap">
+                <table class="data">
+                    <thead><tr><th style="text-align:left">Oficina</th><th class="num">Ventas</th><th class="num">Devol.</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">% Cancel.</th><th class="num">Com. Neta</th></tr></thead>
+                    <tbody>
+                        ${rows.map(r => `<tr class="clickable" data-oficina="${r.o.replace(/"/g, '&quot;')}">
+                            <td style="text-align:left"><strong>${r.o}</strong></td>
+                            <td class="num">${fmtMoney(r.vt)}</td>
+                            <td class="num" style="color:var(--rojo)">${fmtMoney(r.dvt)}</td>
+                            <td class="num" style="color:var(--verde-intenso)">${fmtMoney(r.net)}</td>
+                            <td class="num">${fmtNum(r.pol)}</td>
+                            <td class="pct">${fmtPct(r.tasa)}</td>
+                            <td class="num">${fmtMoney(r.com)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        `;
+    } else {
+        const vO = ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal && v.nombreOficina === d.oficina);
+        const dO = devoluciones.filter(v => v.regional === d.regional && v.zonal === d.zonal && v.oficina === d.oficina);
+        const m = metrics(vO, dO);
+        const compVO = compData.ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal && v.nombreOficina === d.oficina);
+        const compDO = compData.devoluciones.filter(v => v.regional === d.regional && v.zonal === d.zonal && v.oficina === d.oficina);
+        const mOfC = metrics(compVO, compDO);
+        content = `
+        ${kpiRow(m, mOfC)}
+        <div class="grid-2">
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-box"></i>Productos vendidos</div></div>
+                <div class="chart-wrap"><canvas id="ch-r-o-prod"></canvas></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-shield-alt"></i>Aseguradoras</div></div>
+                <div class="chart-wrap"><canvas id="ch-r-o-aseg"></canvas></div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Evolución mensual de la oficina</div></div>
+            <div class="chart-wrap sm"><canvas id="ch-r-o-kpi"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-header"><div class="panel-title"><i class="fas fa-table"></i>Certificados de la oficina</div></div>
+            <div class="detalle-bloques">
+                <div class="bloque-aseguradora">
+                    <h3>CARDIF</h3>
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead><tr><th>Fecha</th><th>Cod. Producto</th><th class="num">Valor</th></tr></thead>
+                            <tbody>
+                                ${vO.filter(v => v.aseguradora === 'CARDIF').slice(0, 50).map(v => `<tr>
+                                    <td>${v.fecha ? MONTHS[v.fecha.getMonth()] + ' ' + v.fecha.getFullYear() : '-'}</td>
+                                    <td>${v.codProducto}</td>
+                                    <td class="num">${fmtMoney(v.valorRecaudado)}</td>
+                                </tr>`).join('')}
+                                ${vO.filter(v => v.aseguradora === 'CARDIF').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bloque-aseguradora">
+                    <h3>MAPFRE</h3>
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead><tr><th>Fecha</th><th>Cod. Producto</th><th class="num">Valor</th></tr></thead>
+                            <tbody>
+                                ${vO.filter(v => v.aseguradora === 'MAPFRE').slice(0, 50).map(v => `<tr>
+                                    <td>${v.fecha ? MONTHS[v.fecha.getMonth()] + ' ' + v.fecha.getFullYear() : '-'}</td>
+                                    <td>${v.codProducto}</td>
+                                    <td class="num">${fmtMoney(v.valorRecaudado)}</td>
+                                </tr>`).join('')}
+                                ${vO.filter(v => v.aseguradora === 'MAPFRE').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bloque-aseguradora">
+                    <h3>COLMENA</h3>
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead><tr><th>Fecha</th><th>Cod. Producto</th><th class="num">Valor</th></tr></thead>
+                            <tbody>
+                                ${vO.filter(v => v.aseguradora === 'COLMENA').slice(0, 50).map(v => `<tr>
+                                    <td>${v.fecha ? MONTHS[v.fecha.getMonth()] + ' ' + v.fecha.getFullYear() : '-'}</td>
+                                    <td>${v.codProducto}</td>
+                                    <td class="num">${fmtMoney(v.valorRecaudado)}</td>
+                                </tr>`).join('')}
+                                ${vO.filter(v => v.aseguradora === 'COLMENA').length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Sin datos</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+    el.innerHTML = `
+    <div class="breadcrumb">${breadcrumb}</div>
+    ${content}
+    `;
+    const cc = getChartColors();
+    const opts = baseOpts('Valor Recaudado', 'Regional');
+    if (!d.regional) {
+        const byReg = Object.entries(groupBy(ventas, 'regional')).map(([k, v]) => ({ k: k || '(sin regional)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+        if (byReg.length > 0) {
+            const grad = greenGradient(byReg.length);
+            makeChart('ch-r-bar', { type: 'bar', data: { labels: byReg.map(x => x.k), datasets: [{ label: 'Ventas', data: byReg.map(x => x.v), backgroundColor: grad, borderRadius: 4 }] }, options: { ...opts, plugins: { ...opts.plugins, legend: { display: false }, yearLabels: false, datalabels: { display: true, align: 'top', color: '#fff', font: { size: 9, weight: '600' }, formatter: v => fmtVal(v), backgroundColor: 'rgba(27,94,32,0.85)', borderRadius: 3, padding: 3 } } } });
+        }
+    } else if (!d.zonal) {
+        const vReg = ventas.filter(v => v.regional === d.regional);
+        const byZ = Object.entries(groupBy(vReg, 'zonal')).map(([k, v]) => ({ k: k || '(sin zonal)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+        const optsZ = baseOpts('Valor Recaudado', 'Zonal');
+        const grad = greenGradient(byZ.length);
+        makeChart('ch-r-z', {
+            type: 'bar',
+            data: {
+                labels: byZ.map(x => x.k),
+                datasets: [{ label: 'Ventas', data: byZ.map(x => x.v), backgroundColor: grad, borderRadius: 4 }]
+            },
+            options: {
+                ...optsZ,
+                plugins: {
+                    ...optsZ.plugins,
+                    legend: { display: false },
+                    yearLabels: false,
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        color: '#fff',
+                        font: { size: 10, weight: '600' },
+                        formatter: v => fmtVal(v),
+                        backgroundColor: 'rgba(27,94,32,0.85)',
+                        borderRadius: 3,
+                        padding: 3
+                    }
+                },
+                scales: {
+                    ...optsZ.scales,
+                    x: {
+                        ...optsZ.scales.x,
+                        ticks: {
+                            font: { size: 10, weight: '400' },
+                            maxRotation: 0,
+                            minRotation: 0,
+                            autoSkip: false,
+                            maxTicksLimit: 200,
+                            color: getChartColors().axisText
+                        }
+                    }
+                }
+            }
+        });
+    } else if (!d.oficina) {
+        const vZ = ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal);
+        const byO = Object.entries(groupBy(vZ, 'nombreOficina')).map(([k, v]) => ({ k: k || '(sin oficina)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v);
+        const optsO = baseOpts('Valor Recaudado', 'Oficina');
+        const grad = greenGradient(byO.length);
+        makeChart('ch-r-o', { type: 'bar', data: { labels: byO.map(x => x.k), datasets: [{ label: 'Ventas', data: byO.map(x => x.v), backgroundColor: grad, borderRadius: 4 }] }, options: { ...optsO, plugins: { ...optsO.plugins, legend: { display: false }, yearLabels: false, datalabels: { display: true, align: 'top', color: '#fff', font: { size: 9, weight: '600' }, formatter: v => fmtVal(v), backgroundColor: 'rgba(27,94,32,0.85)', borderRadius: 3, padding: 3 } } } });
+    } else {
+        const vO = ventas.filter(v => v.regional === d.regional && v.zonal === d.zonal && v.nombreOficina === d.oficina);
+        const byProd = Object.entries(groupBy(vO, 'nombreProducto')).map(([k, v]) => ({ k: k || '(sin nombre)', v: sumBy(v, 'valorRecaudado') })).sort((a, b) => b.v - a.v).slice(0, 10);
+        const optsP = baseOptsH('Producto', 'Valor Recaudado');
+        const grad = greenGradient(byProd.length);
+        makeChart('ch-r-o-prod', { type: 'bar', data: { labels: byProd.map(x => x.k.length > 25 ? x.k.substring(0, 25) + '...' : x.k), datasets: [{ label: 'Ventas', data: byProd.map(x => x.v), backgroundColor: grad, borderRadius: 4 }] }, options: optsP });
+        const byAseg = Object.entries(groupBy(vO, 'aseguradora')).map(([k, v]) => ({ k, v: sumBy(v, 'valorRecaudado') }));
+        makeChart('ch-r-o-aseg', { type: 'doughnut', data: { labels: byAseg.map(x => x.k), datasets: [{ data: byAseg.map(x => x.v), backgroundColor: [COLORS.verdePetroleo, COLORS.verdeMedio, COLORS.verdeClaro], borderWidth: 2, borderColor: cc.pieBorder }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { datalabels: { display: true, formatter: (value, context) => { const t = context.dataset.data.reduce((a, b) => a + b, 0); return t > 0 ? fmtPct((value / t) * 100) : '0%' }, color: '#fff', font: { size: 11, weight: '700' }, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: 4 }, title: { display: true, text: 'Aseguradora', color: cc.text, font: { size: 11, weight: '600' } } } } });
+        const byMonth = groupByYM(vO);
+        const ymKeys = sortedYM(byMonth);
+        const optsKPI = baseOpts('Valor Recaudado', 'Período (Mes-Año)');
+        fitChartWidth('ch-r-o-kpi', ymKeys.length);
+        makeChart('ch-r-o-kpi', {
+            type: 'bar',
+            data: {
+                labels: ymKeys,
+                datasets: [{ label: 'Ventas', data: ymKeys.map(k => sumBy(byMonth[k], 'valorRecaudado')), backgroundColor: COLORS.verdeIntenso, borderRadius: 4 }]
+            },
+            options: { ...optsKPI, plugins: { ...optsKPI.plugins, yearDivider: true, legend: { display: false }, datalabels: { display: true, align: 'top', color: '#fff', font: { size: 8, weight: '600' }, formatter: v => fmtVal(v), backgroundColor: 'rgba(27,94,32,0.85)', borderRadius: 3, padding: 3 } } }
+        });
+    }
+    el.querySelectorAll('.breadcrumb span[data-level]').forEach(s => {
+        s.addEventListener('click', () => {
+            const lvl = s.dataset.level;
+            if (lvl === 'root') STATE.drill = { regional: null, zonal: null, oficina: null };
+            else if (lvl === 'regional') STATE.drill = { regional: d.regional, zonal: null, oficina: null };
+            else if (lvl === 'zonal') STATE.drill = { regional: d.regional, zonal: d.zonal, oficina: null };
+            renderRegionales();
+        });
+    });
+    el.querySelectorAll('tr[data-reg]').forEach(tr => {
+        tr.addEventListener('click', () => {
+            STATE.drill = { regional: tr.dataset.reg, zonal: null, oficina: null };
+            renderRegionales();
+        });
+    });
+    el.querySelectorAll('tr[data-zonal]').forEach(tr => {
+        tr.addEventListener('click', () => {
+            STATE.drill.zonal = tr.dataset.zonal;
+            renderRegionales();
+        });
+    });
+    el.querySelectorAll('tr[data-oficina]').forEach(tr => {
+        tr.addEventListener('click', () => {
+            STATE.drill.oficina = tr.dataset.oficina;
+            renderRegionales();
+        });
+    });
+}
+        function renderTendencias() {
+            const trendData = getTrendFiltered();
+            const byMonthV = groupByYM(trendData.ventas);
+            const byMonthD = groupByYM(trendData.devoluciones);
+            const ymKeys = [...new Set([...Object.keys(byMonthV), ...Object.keys(byMonthD)])].sort();
+            const dV = ymKeys.map(k => sumBy(byMonthV[k] || [], 'valorRecaudado'));
+            const dD = ymKeys.map(k => sumBy(byMonthD[k] || [], 'valor'));
+            const dN = dV.map((v, i) => v - dD[i]);
+            const labels = ymKeys;
+            let acc = 0;
+            const dAcc = dN.map(v => acc += v);
+            const last3 = dN.slice(-3);
+            const avg3 = last3.length ? last3.reduce((a, b) => a + b, 0) / last3.length : 0;
+            const el = document.getElementById('page-tendencias');
+            el.innerHTML = `
+            <div class="kpi-grid">
+                ${kpiCard('Promedio Mensual', fmtMoney(dN.length ? dN.reduce((a, b) => a + b, 0) / dN.length : 0), null, '', 'chart-line')}
+                ${kpiCard('Crecimiento Acum.', fmtMoney(acc), null, '', 'arrow-up', acc > 0 ? 'success' : 'danger')}
+                ${kpiCard('Proyección próx. mes', fmtMoney(avg3), null, '', 'bullseye')}
+                ${kpiCard('Mejor Mes', fmtMoney(Math.max(...dN, 0)), null, '', 'trophy', 'success')}
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-area"></i>Evolución histórica</div></div>
+                <div class="chart-wrap lg"><canvas id="ch-t-hist"></canvas></div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Ventas netas acumuladas</div></div>
+                    <div class="chart-wrap"><canvas id="ch-t-acc"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-balance-scale"></i>Comparativo Ventas vs Devoluciones</div></div>
+                    <div class="chart-wrap"><canvas id="ch-t-comp"></canvas></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-table"></i>Detalle mensual</div></div>
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead><tr><th>Mes</th><th class="num">Ventas Brutas</th><th class="num">Devoluciones</th><th class="num">Netas</th><th class="num">Pólizas</th><th class="pct">Var. mensual</th></tr></thead>
+                        <tbody>
+                            ${ymKeys.map((k, i) => {
+                                const v = dV[i], dd = dD[i], n = dN[i];
+                                const pol = (byMonthV[k] || []).length;
+                                const prev = i > 0 ? dN[i - 1] : 0;
+                                const varM = prev > 0 ? ((n - prev) / Math.abs(prev)) * 100 : 0;
+                                return `<tr>
+                                    <td><strong>${ymLabel(k)}</strong></td>
+                                    <td class="num">${fmtMoney(v)}</td>
+                                    <td class="num" style="color:var(--rojo)">${fmtMoney(dd)}</td>
+                                    <td class="num" style="color:var(--verde-intenso)">${fmtMoney(n)}</td>
+                                    <td class="num">${fmtNum(pol)}</td>
+                                    <td class="pct">${i === 0 ? '-' : `<span class="tag ${varM > 0 ? 'up' : varM < 0 ? 'down' : 'flat'}">${varM > 0 ? '↑' : '↓'} ${fmtPct(Math.abs(varM))}</span>`}</td>
+                                </tr>`;
+                            }).join('')}
+                            ${ymKeys.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Sin datos</td></tr>' : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `;
+            const cc = getChartColors();
+            const optsH = baseOpts('Valor', 'Período (Mes-Año)');
+            fitChartWidth('ch-t-hist', ymKeys.length);
+            makeChart('ch-t-hist', {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Ventas Brutas',
+                        data: dV,
+                        backgroundColor: COLORS.verdeIntenso,
+                        borderColor: COLORS.verdeIntenso,
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barPercentage: .6,
+                        datalabels: { display: true, align: 'bottom', anchor: 'end', offset: 2,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(27,94,32,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }, {
+                        label: 'Devoluciones',
+                        data: dD,
+                        backgroundColor: COLORS.rojo,
+                        borderColor: COLORS.rojo,
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barPercentage: .6,
+                        datalabels: { display: true, align: 'top', anchor: 'end', offset: 2,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }, {
+                        label: 'Ventas Netas',
+                        data: dN,
+                        type: 'line',
+                        borderColor: COLORS.verdeNeta,
+                        backgroundColor: 'rgba(0,200,83,.1)',
+                        fill: true,
+                        tension: .35,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: COLORS.verdeNeta,
+                        datalabels: { display: true, align: 'top', anchor: 'end', offset: 4,
+                            color: '#fff', font: { size: 9, weight: '600' },
+                            formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(0,200,83,0.85)',
+                            borderRadius: 3, padding: 3, clamp: true }
+                    }]
+                },
+                options: { ...optsH, plugins: { ...optsH.plugins, yearDivider: true } }
+            });
+            const optsAc = baseOpts('Valor Acumulado', 'Período (Mes-Año)');
+            fitChartWidth('ch-t-acc', ymKeys.length);
+            makeChart('ch-t-acc', { type: 'line', data: { labels, datasets: [{ label: 'Ventas Netas Acumuladas',
+                        data: dAcc, borderColor: COLORS.verdeBosque,
+                        backgroundColor: 'rgba(46,125,50,.15)', fill: true, tension: .35,
+                        borderWidth: 2, pointRadius: 5, datalabels: { display: true,
+                            align: 'top', color: '#fff', font: { size: 8,
+                                weight: '600' }, formatter: v => fmtVal(v),
+                            backgroundColor: 'rgba(46,125,50,0.85)',
+                            borderRadius: 3, padding: 3 }
+                    }] }, options: { ...optsAc, plugins: { ...optsAc.plugins,
+                        yearDivider: true, legend: { display: false } } } });
+            const optsC = baseOpts('Valor', 'Período (Mes-Año)');
+            fitChartWidth('ch-t-comp', ymKeys.length);
+            makeChart('ch-t-comp', { type: 'bar', data: { labels, datasets: [{ label: 'Ventas Brutas',
+                        data: dV, backgroundColor: COLORS.verdeIntenso, borderRadius: 4 },
+                    { label: 'Devoluciones', data: dD, backgroundColor: COLORS.rojo,
+                        borderRadius: 4 }
+                    ] }, options: { ...optsC, plugins: { ...optsC.plugins, yearDivider: true,
+                        datalabels: { display: true, align: 'top', color: '#fff',
+                            font: { size: 8, weight: '600' }, formatter: v =>
+                                fmtVal(v),
+                            backgroundColor: ctx => ctx.datasetIndex === 0 ?
+                                'rgba(27,94,32,0.85)' :
+                                'rgba(211,47,47,0.85)',
+                            borderRadius: 3, padding: 3 } } } });
+        }
+        function renderConfig() {
+            const el = document.getElementById('page-config');
+            el.innerHTML = `
+            <div class="panel">
+                <div class="panel-header"><div class="panel-title"><i class="fas fa-cloud"></i>Estado de conexión</div></div>
+                <div id="syncStatusBar"></div>
+                <div style="margin-top:12px">
+                    <button class="btn btn-primary" id="btnSyncNow"><i class="fas fa-sync-alt"></i>Actualizar ahora</button>
+                </div>
+                <div class="status-bar" id="statusBar"></div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-database"></i>Estado de datos</div></div>
+                    <div id="dataStatus"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-info-circle"></i>¿Cómo usar?</div></div>
+                    <div style="font-size:12px;color:var(--text-2);line-height:1.7">
+                        <p>1. Los datos se sincronizan automáticamente cada ${AUTO_REFRESH_MINUTES} minutos.</p>
+                        <p>2. Usa los filtros globales (Aseguradora, Año, Mes) para acotar el análisis.</p>
+                        <p>3. Navega por las páginas para profundizar en cada dimensión.</p>
+                        <p>4. En <strong>Regionales</strong> haz clic sobre una fila para hacer drill-down: Regional → Zonal → Oficina.</p>
+                        <p>5. Los <strong>Insights</strong> se generan automáticamente según los filtros.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-palette"></i>Apariencia</div></div>
+                    <p style="font-size:11px;color:var(--text-2)">Elige el tema de la interfaz.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                        <button class="btn btn-sm ${STATE.theme === 'light' ? 'btn-primary' : ''}" id="btnThemeLight"><i class="fas fa-sun"></i>Claro</button>
+                        <button class="btn btn-sm ${STATE.theme === 'dark' ? 'btn-primary' : ''}" id="btnThemeDark"><i class="fas fa-moon"></i>Oscuro</button>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><i class="fas fa-sliders-h"></i>Datos</div></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn btn-sm" id="btnPanelRefresh"><i class="fas fa-sync-alt"></i>Actualizar datos</button>
+                        <button class="btn btn-sm" id="btnClear"><i class="fas fa-eraser"></i>Limpiar filtros</button>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.getElementById('btnSyncNow').addEventListener('click', loadFromGoogleSheets);
+            document.getElementById('btnPanelRefresh').addEventListener('click', loadFromGoogleSheets);
+            renderSyncStatus(document.getElementById('syncStatusBar'));
+            document.getElementById('btnClear').addEventListener('click', () => {
+                STATE.filters = { aseg: '', year: '', month: '' };
+                document.getElementById('fAseg').value = '';
+                document.getElementById('fYear').value = '';
+                document.getElementById('fMonth').value = '';
+                updateMonthOptions();
+                renderAll();
+            });
+            document.getElementById('btnThemeLight').addEventListener('click', () => setTheme('light'));
+            document.getElementById('btnThemeDark').addEventListener('click', () => setTheme('dark'));
+            updateStatus();
+        }
+        function setTheme(t) {
+            STATE.theme = t;
+            document.body.dataset.theme = t;
+            document.getElementById('navThemeLight').classList.toggle('theme-active', t === 'light');
+            document.getElementById('navThemeDark').classList.toggle('theme-active', t === 'dark');
+            renderAll();
+        }
+        function renderSyncStatus(container) {
+            const s = STATE.syncStatus || { status: 'idle' };
+            const lastSync = STATE.lastSync ? STATE.lastSync.toLocaleString('es-CO') : 'Nunca';
+            const map = {
+                idle: { cls: 'warn', icon: 'clock', text: 'Preparando información' },
+                loading: { cls: 'warn', icon: 'spinner fa-spin', text: 'Actualizando información...' },
+                ok: { cls: 'ok', icon: 'check-circle', text: 'Información actualizada' },
+                error: { cls: 'err', icon: 'exclamation-circle', text: 'No se pudo actualizar la información' }
+            };
+            const info = map[s.status] || map.idle;
+            container.innerHTML = `
+            <div class="status-chip ${info.cls}"><i class="fas fa-${info.icon}"></i>${info.text}</div>
+            <div class="status-chip"><i class="fas fa-calendar-check"></i>Última sincronización: ${lastSync}</div>
+            `;
+        }
+        function updateStatus() {
+            const ds = document.getElementById('dataStatus');
+            if (!ds) return;
+            const n = STATE.data.ventas.length;
+            const nd = STATE.data.devoluciones.length;
+            const byYM = groupByYM(STATE.data.ventas);
+            const byYMDevo = groupByYM(STATE.data.devoluciones);
+            const ymKeys = [...new Set([...Object.keys(byYM), ...Object.keys(byYMDevo)])].sort();
+            const cobertura = ymKeys.length ? `${ymLabel(ymKeys[0])} → ${ymLabel(ymKeys[ymKeys.length - 1])}` : 'Sin datos';
+            const tablaRows = ymKeys.map(k => `
+                <tr><td style="text-align:left">${ymLabel(k)}</td><td class="num">${fmtNum((byYM[k] || []).length)}</td><td class="num">${fmtNum((byYMDevo[k] || []).length)}</td></tr>
+            `).join('');
+            ds.innerHTML = `
+            <div class="status-bar" style="margin:0 0 10px">
+                <div class="status-chip ok"><i class="fas fa-hand-holding-usd"></i>Ventas: ${fmtNum(n)}</div>
+                <div class="status-chip ok"><i class="fas fa-undo"></i>Devoluciones: ${fmtNum(nd)}</div>
+                <div class="status-chip"><i class="fas fa-calendar-alt"></i>${cobertura} (${ymKeys.length} meses)</div>
+            </div>
+            ${ymKeys.length ? `<details><summary style="cursor:pointer;font-size:11px;color:var(--text-2);font-weight:600">Ver detalle por período</summary><div class="table-wrap" style="margin-top:8px"><table class="data"><thead><tr><th style="text-align:left">Período</th><th class="num">Ventas</th><th class="num">Devoluciones</th></tr></thead><tbody>${tablaRows}</tbody></table></div></details>` : ''}
+            `;
+        }
+        const PAGE_META = {
+            home: { t: 'Resumen Ejecutivo', s: '¿Cómo va el negocio?' },
+            operacion: { t: 'Operación', s: 'Vista global por banca, canal, sexo y tipo' },
+            ventas: { t: 'Ventas', s: '¿Cómo estamos vendiendo?' },
+            devoluciones: { t: 'Devoluciones', s: '¿Qué se cancela y por qué?' },
+            comisiones: { t: 'Comisiones', s: '¿Cuánto generamos y cuánto perdemos?' },
+            aseguradoras: { t: 'Aseguradoras', s: '¿Cuál aporta más valor y cuál presenta mayor riesgo?' },
+            productos: { t: 'Productos', s: '¿Qué productos generan ingresos, cuáles caen y cuáles cancelan más?' },
+            oficinas: { t: 'Oficinas', s: '¿Qué oficinas destacan y cuáles requieren intervención?' },
+            regionales: { t: 'Regionales', s: '¿Qué Regional está creciendo, cuál está cayendo y por qué?' },
+            tendencias: { t: 'Tendencias', s: '¿Hacia dónde se dirige el negocio?' },
+            config: { t: 'Configuración', s: 'Carga de datos y preferencias' }
+        };
+        function navigateTo(page) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
+            page));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const el = document.getElementById('page-' + page);
+            if (el) el.classList.add('active');
+            const meta = PAGE_META[page] || { t: page, s: '' };
+            document.getElementById('pageTitle').innerHTML = meta.t + '<small>' + meta.s + '</small>';
+            renderPage(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
+            }, 50);
+        }
+        function renderPage(page) {
+            if (STATE.data.ventas.length === 0 && page !== 'config') {
+                document.getElementById('page-' + page).innerHTML = `
+                <div class="empty">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Cargando información</h3>
+                    <p>Un momento por favor...</p>
+                </div>`;
+                return;
+            }
+            switch (page) {
+                case 'home':
+                    renderHome();
+                    break;
+                case 'operacion':
+                    renderOperacion();
+                    break;
+                case 'ventas':
+                    renderVentas();
+                    break;
+                case 'devoluciones':
+                    renderDevoluciones();
+                    break;
+                case 'comisiones':
+                    renderComisiones();
+                    break;
+                case 'aseguradoras':
+                    renderAseguradoras();
+                    break;
+                case 'productos':
+                    renderProductos();
+                    break;
+                case 'oficinas':
+                    renderOficinas();
+                    break;
+                case 'regionales':
+                    renderRegionales();
+                    break;
+                case 'tendencias':
+                    renderTendencias();
+                    break;
+                case 'config':
+                    renderConfig();
+                    break;
+            }
+        }
+        function renderAll() {
+            const active = document.querySelector('.nav-item.active');
+            const page = active ? active.dataset.page : 'home';
+            renderPage(page);
+        }
+        document.querySelectorAll('.nav-item[data-page]').forEach(n => {
+            n.addEventListener('click', () => navigateTo(n.dataset.page));
+        });
+        document.getElementById('navThemeLight').addEventListener('click', () => setTheme('light'));
+        document.getElementById('navThemeDark').addEventListener('click', () => setTheme('dark'));
+        document.getElementById('navRefreshData').addEventListener('click', loadFromGoogleSheets)
+        document.getElementById('navClearData').addEventListener('click', () => {
+            STATE.filters = { aseg: '', year: '', month: '' };
+            document.getElementById('fAseg').value = '';
+            document.getElementById('fYear').value = '';
+            document.getElementById('fMonth').value = '';
+            updateMonthOptions();
+            renderAll();
+        });
+        document.getElementById('fAseg').addEventListener('change', e => { STATE.filters.aseg = e.target.value;
+            renderAll() });
+        document.getElementById('fYear').addEventListener('change', e => { STATE.filters.year = e.target.value;
+            updateMonthOptions();
+            renderAll() });
+        document.getElementById('fMonth').addEventListener('change', e => { STATE.filters.month = e.target.value;
+            renderAll() });
+        document.getElementById('btnClearFilters').addEventListener('click', () => {
+            STATE.filters = { aseg: '', year: '', month: '' };
+            document.getElementById('fAseg').value = '';
+            document.getElementById('fYear').value = '';
+            document.getElementById('fMonth').value = '';
+            updateMonthOptions();
+            renderAll();
+        });
+function resizeAllCharts() {
+    Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
+}
+document.getElementById('btnToggleSidebar').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const app = document.getElementById('app');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+        const isOpen = app.classList.toggle('sidebar-open');
+        overlay.style.display = isOpen ? 'block' : 'none';
+    } else {
+        STATE.sidebarCollapsed = !STATE.sidebarCollapsed;
+        app.classList.toggle('sidebar-collapsed', STATE.sidebarCollapsed);
+    }
+    requestAnimationFrame(resizeAllCharts);
+    setTimeout(resizeAllCharts, 150);
+    setTimeout(resizeAllCharts, 320);
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    const app = document.getElementById('app');
+    app.classList.remove('sidebar-open');
+    document.getElementById('sidebarOverlay').style.display = 'none';
+    setTimeout(resizeAllCharts, 320);
+});
+document.addEventListener('click', (e) => {
+    const app = document.getElementById('app');
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.getElementById('btnToggleSidebar');
+    if (!sidebar || sidebar.contains(e.target) || toggleBtn.contains(e.target)) return;
+    if (window.innerWidth <= 768) {
+        if (app.classList.contains('sidebar-open')) {
+            app.classList.remove('sidebar-open');
+            document.getElementById('sidebarOverlay').style.display = 'none';
+            setTimeout(resizeAllCharts, 320);
+        }
+        return;
+    }
+    if (!STATE.sidebarCollapsed) {
+        STATE.sidebarCollapsed = true;
+        app.classList.add('sidebar-collapsed');
+        setTimeout(resizeAllCharts, 320);
+    }
+});
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resizeAllCharts, 100);
+});
+document.querySelectorAll('.nav-item[data-tooltip]').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+        if (!STATE.sidebarCollapsed || window.innerWidth <= 768) return;
+        const tooltip = document.getElementById('sidebarTooltip');
+        const rect = item.getBoundingClientRect();
+        tooltip.textContent = item.dataset.tooltip;
+        tooltip.style.left = (rect.right + 8) + 'px';
+        tooltip.style.top = (rect.top + rect.height / 2) + 'px';
+        tooltip.style.transform = 'translateY(-50%)';
+        tooltip.style.display = 'block';
+    });
+    item.addEventListener('mouseleave', () => {
+        document.getElementById('sidebarTooltip').style.display = 'none';
+    });
+});
+(async () => {
+            await loadCache();
+            renderAll();
+            loadFromGoogleSheets();
+            setInterval(loadFromGoogleSheets, AUTO_REFRESH_MINUTES * 60 * 1000);
+        })();
+    </script>
+</body>
+</html>
