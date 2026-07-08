@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Registro de Visitas</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#185FA5;--brand-l:#eef4fc;--brand-d:#0C447C;
+  --ok:#16a34a;--ok-bg:#f0fdf4;--err:#dc2626;--err-bg:#fef2f2;
+  --bg:#ffffff;--bg2:#f8fafc;--bg3:#f1f5f9;--bd:#e2e8f0;
+  --t1:#0f172a;--t2:#64748b;--t3:#94a3b8;
+  --r-md:8px;--r-lg:12px;--r-xl:16px;
+  --sh-md:0 4px 6px -1px rgb(0 0 0/.07),0 2px 4px -1px rgb(0 0 0/.04);
+  --sh-lg:0 10px 15px -3px rgb(0 0 0/.08),0 4px 6px -2px rgb(0 0 0/.04);
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg2);min-height:100vh;color:var(--t1);font-size:14px}
+.wrap{max-width:560px;margin:0 auto;padding:28px 16px 60px}
+.card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-xl);box-shadow:var(--sh-lg);padding:28px 24px;position:relative}
+.hd{margin-bottom:22px}
+.hd h1{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
+.hd p{font-size:13px;color:var(--t2);margin-top:4px}
+.saludo-wrap{margin-bottom:18px}
+.saludo-hola{font-size:17px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.saludo-hola .wave{display:inline-block;animation:wave 2s ease-in-out infinite;transform-origin:70% 70%}
+@keyframes wave{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-8deg)}45%{transform:rotate(14deg)}60%{transform:rotate(-4deg)}75%{transform:rotate(10deg)}}
+.saludo-mensaje{font-size:12.5px;color:var(--t3);margin-top:2px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.req{color:var(--err)}
+.fg{margin-bottom:16px;position:relative}
+input[type=text],input[type=search],select{
+  width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:var(--r-md);
+  font-size:14px;color:var(--t1);background:var(--bg);transition:border-color .15s;font-family:inherit
+}
+input:focus,select:focus{outline:none;border-color:var(--brand)}
+input.err-field,select.err-field{border-color:var(--err)}
+select:disabled,input:disabled{background:var(--bg3);color:var(--t3);cursor:not-allowed;opacity:.7}
+.err-msg{font-size:11.5px;color:var(--err);margin-top:4px;display:none}
+.err-msg.show{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.of-results{position:absolute;top:100%;left:0;right:0;background:var(--bg);border:1px solid var(--bd);
+  border-radius:var(--r-md);box-shadow:var(--sh-md);max-height:240px;overflow-y:auto;z-index:20;margin-top:4px;display:none}
+.of-results.show{display:block}
+.of-opt{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--bg3)}
+.of-opt:last-child{border-bottom:none}
+.of-opt:hover{background:var(--brand-l)}
+.of-opt-name{font-weight:600;font-size:13px;color:var(--t1)}
+.of-opt-meta{font-size:11.5px;color:var(--t2);margin-top:1px}
+.sel-card{background:var(--brand-l);border:1px solid var(--brand);border-radius:var(--r-md);padding:12px 14px;margin-top:8px;display:none}
+.sel-card.show{display:block}
+.osc-name{font-weight:700;font-size:14px;color:var(--brand-d);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.osc-cat{font-size:10.5px;font-weight:700;background:#fff;color:var(--brand-d);border-radius:5px;padding:2px 7px}
+.osc-dir{font-size:12.5px;color:var(--brand-d);margin-top:8px;font-weight:700;background:#fff;border-radius:6px;padding:7px 10px;display:flex;align-items:flex-start;gap:5px}
+.osc-dir i{margin-top:1px}
+.osc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.of-chip{font-size:11px;color:var(--t2);background:#fff;border:1px solid var(--bd);border-radius:20px;padding:3px 9px;display:inline-flex;align-items:center;gap:4px}
+.of-chip i{font-size:12px}
+.btn-mini-red{
+  margin-top:10px;padding:2px 0;font-size:11.5px;font-weight:700;border:none;background:none;
+  color:var(--err);cursor:pointer;display:inline-flex;align-items:center;gap:4px;width:auto;transition:color .15s
+}
+.btn-mini-red:hover{color:#b91c1c;text-decoration:underline}
+.btn{width:100%;padding:13px;border:none;border-radius:var(--r-md);background:var(--brand);color:#fff;
+  font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.btn:hover{background:var(--brand-d)}
+.btn:disabled{background:var(--t3);cursor:not-allowed}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--ok);color:#fff;
+  padding:12px 20px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;box-shadow:var(--sh-lg);opacity:0;
+  transition:all .25s;z-index:100;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--err)}
+.status-line{text-align:center;font-size:12px;color:var(--t3);margin-top:14px}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+.aseg-row{display:flex;gap:10px;margin-top:0}
+.aseg-pill{flex:1;padding:11px 12px;border-radius:var(--r-md);border:1.5px solid var(--bd);cursor:pointer;
+  text-align:center;font-weight:700;font-size:13.5px;transition:all .15s;color:var(--t2)}
+.aseg-pill:hover{border-color:var(--brand);color:var(--brand)}
+.aseg-pill.sel-m{background:#eef4fc;border-color:#185FA5;color:#185FA5}
+.aseg-pill.sel-c{background:#fef6e7;border-color:#ef9f27;color:#b36d00}
+.hidden{display:none}
+.change-user{background:none;border:none;color:var(--brand);font-size:12.5px;font-weight:600;cursor:pointer;padding:0;margin-top:2px}
+#debug{background:#f0f0f0;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:8px;font-size:12px;max-height:300px;overflow:auto;font-family:monospace}
+#debug strong{color:#333}
+#debug-content{color:#555;line-height:1.6}
+#debug-content .ok{color:#16a34a;font-weight:bold}
+#debug-content .err{color:#dc2626;font-weight:bold}
+#debug-content .info{color:#185FA5}
+#debug-content .warning{color:#ef9f27;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <div class="card" id="card-login">
+    <div class="hd">
+      <h1><i class="ti ti-user-check" style="color:var(--brand)"></i> Ingresar</h1>
+      <p>Selecciona tu aseguradora y tu nombre para continuar.</p>
+    </div>
+    <div class="fg">
+      <label>Aseguradora <span class="req">*</span></label>
+      <div class="aseg-row">
+        <div class="aseg-pill" id="pill-m" onclick="pickAseg('Mapfre')">Mapfre</div>
+        <div class="aseg-pill" id="pill-c" onclick="pickAseg('Colmena')">Colmena</div>
+      </div>
+      <div class="err-msg" id="err-aseg">Selecciona una aseguradora</div>
+    </div>
+    <div class="fg">
+      <label>Funcionario <span class="req">*</span></label>
+      <select id="l-func">
+        <option value="">Selecciona aseguradora primero...</option>
+      </select>
+      <div class="err-msg" id="err-lfunc">Selecciona tu nombre</div>
+    </div>
+    <button class="btn" onclick="doLogin()"><i class="ti ti-arrow-right"></i> Ingresar</button>
+  </div>
+  <div class="card hidden" id="card-form">
+    <div class="hd">
+      <h1><i class="ti ti-map-pin-check" style="color:var(--brand)"></i> Registro de Visita</h1>
+      <p>Diligencia los datos de la visita. Se registra automáticamente.</p>
+    </div>
+    <div class="saludo-wrap">
+      <div class="saludo-hola">Hola <span id="saludo-nombre">—</span> <span class="wave">👋</span></div>
+      <div class="saludo-mensaje" id="saludo-mensaje">—</div>
+    </div>
+    <div style="text-align:right;margin-bottom:14px;margin-top:-8px">
+      <button class="change-user" onclick="cambiarUsuario()">Cambiar usuario</button>
+    </div>
+    <div class="fg">
+      <label>Buscar oficina <span class="req">*</span></label>
+      <input type="text" id="of-search" placeholder="Selecciona regional y zonal primero..." autocomplete="off" disabled>
+      <div class="of-results" id="of-results"></div>
+      <div class="err-msg" id="err-oficina">Selecciona una oficina de la lista</div>
+      <div class="sel-card" id="sel-card"></div>
+      <button type="button" class="btn-mini-red hidden" id="btn-cambiar-oficina" onclick="cambiarOficina(event)">
+        <i class="ti ti-repeat"></i> Cambiar de oficina
+      </button>
+    </div>
+    <div class="grid2">
+      <div class="fg">
+        <label>Regional <span class="req">*</span></label>
+        <select id="f-regional2" onchange="onRegionalChange()">
+          <option value="">Seleccionar...</option>
+        </select>
+        <div class="err-msg" id="err-regional">Selecciona la regional</div>
+      </div>
+      <div class="fg">
+        <label>Zonal <span class="req">*</span></label>
+        <select id="f-zonal2" onchange="onZonalChange()" disabled>
+          <option value="">Selecciona regional primero...</option>
+        </select>
+        <div class="err-msg" id="err-zonal">Selecciona la zonal</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Fecha <span class="req">*</span></label>
+      <input type="text" id="f-fecha" placeholder="Seleccionar fecha">
+      <div class="err-msg" id="err-fecha">Selecciona la fecha</div>
+    </div>
+    <div class="grid2">
+      <div class="fg">
+        <label>Modalidad <span class="req">*</span></label>
+        <select id="f-modal">
+          <option value="">Seleccionar...</option>
+          <option>Presencial</option>
+          <option>Virtual</option>
+        </select>
+        <div class="err-msg" id="err-modal">Selecciona la modalidad</div>
+      </div>
+      <div class="fg">
+        <label>Objetivo <span class="req">*</span></label>
+        <select id="f-obj">
+          <option value="">Seleccionar...</option>
+          <option selected>Visita Comercial</option>
+          <option>Capacitación</option>
+          <option>Seguimiento</option>
+          <option>Entrega de Material</option>
+        </select>
+        <div class="err-msg" id="err-obj">Selecciona el objetivo</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="fg">
+        <label>Comerciales</label>
+        <input type="text" id="f-com" inputmode="numeric" maxlength="2" placeholder="Ingresar número o cantidad">
+        <div class="err-msg" id="err-com">Solo números, máximo 2 dígitos (1 a 20)</div>
+      </div>
+      <div class="fg">
+        <label>Operativos</label>
+        <input type="text" id="f-ope" inputmode="numeric" maxlength="2" placeholder="Ingresar número o cantidad">
+        <div class="err-msg" id="err-ope">Solo números, máximo 2 dígitos (1 a 20)</div>
+      </div>
+    </div>
+    <button class="btn" id="btn-submit" onclick="registrarVisita()">
+      <i class="ti ti-send-2"></i> Registrar visita
+    </button>
+    <div class="status-line" id="status-line">Cargando base de oficinas...</div>
+  </div>
+
+  <div id="debug">
+    <strong>Panel de Depuración</strong><br>
+    <div id="debug-content">Esperando eventos...</div>
+  </div>
+</div>
+<script>
+const URL_MAESTRO_OFICINAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTytGtmX-qgf-IxYpKiulo8iRIsJ6iTMgw70cbwQclOHuU5pS2MDKgwPqjMjgDuXzpaulDnLdcRdS5u/pub?gid=1309200962&single=true&output=csv";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzhI2vFDAWWZ7KXqOqKW3oe9HGmiSHfIeS7RhlSz_CBuvXDbbaFszBnbyfTvbpDlrLTIg/exec";
+const URL_SPREADSHEET = "https://docs.google.com/spreadsheets/d/1GJY38wYmv_rPkTTYm8V1axHSDpcjViPYF-mmAgcAsvU";
+
+const FUNCIONARIOS = {
+  Mapfre: ['JOSE ORDOÑEZ', 'ANDRES PACHON', 'JESSICA QUITO', 'DANIEL CUELLAR', 'DIEGO HEREDIA',
+    'YOLIBETH MENCO', 'HELYN YOHANA CAÑON TELLEZ', 'JUAN PABLO SANCHEZ', 'NOHORA HERNANDEZ',
+    'CATHERINE PARRA', 'DIANA FONSECA'],
+  Colmena: ['MARIA DEL MAR RIOS', 'CHRISTIAN SORIANO', 'ANDREA OLAYA', 'FABIAN FORERO GONZALEZ',
+    'JUAN FELIPE HERNANDEZ', 'ALEXANDER TAMAYO']
+};
+
+let OFICINAS = [];
+let oficinaSel = null;
+let fpFecha = null;
+let asegSel = null;
+let SESSION = null;
+
+function $(id){ return document.getElementById(id); }
+
+function debugLog(msg, type) {
+  const el = document.getElementById('debug-content');
+  if (el) {
+    const time = new Date().toLocaleTimeString();
+    const color = type === 'ok' ? 'ok' : type === 'err' ? 'err' : type === 'warning' ? 'warning' : 'info';
+    el.innerHTML += `<div class="${color}">${time} ${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+  }
+  console.log(`[${type}] ${msg}`);
+}
+
+function clearError(id){
+  const inp = $(id);
+  const err = $('err-'+id.replace('f-','').replace('of-search','oficina'));
+  if(inp) inp.classList.remove('err-field');
+  if(err) err.classList.remove('show');
+}
+function clearAllErrors(){
+  document.querySelectorAll('.err-field').forEach(el=>el.classList.remove('err-field'));
+  document.querySelectorAll('.err-msg.show').forEach(el=>el.classList.remove('show'));
+}
+function showToast(msg, isError){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(()=>{ t.className = 'toast'; }, 3200);
+}
+function pickAseg(aseg){
+  asegSel = aseg;
+  $('pill-m').className = 'aseg-pill' + (aseg==='Mapfre' ? ' sel-m' : '');
+  $('pill-c').className = 'aseg-pill' + (aseg==='Colmena' ? ' sel-c' : '');
+  $('err-aseg').classList.remove('show');
+  const sel = $('l-func');
+  sel.innerHTML = '<option value="">Seleccionar...</option>' +
+    FUNCIONARIOS[aseg].map(n => `<option value="${n}">${n}</option>`).join('');
+}
+function doLogin(){
+  let ok = true;
+  if(!asegSel){ $('err-aseg').classList.add('show'); ok = false; }
+  if(!$('l-func').value){ $('err-lfunc').classList.add('show'); ok = false; } else { $('err-lfunc').classList.remove('show'); }
+  if(!ok) return;
+  SESSION = { aseg: asegSel, func: $('l-func').value };
+  localStorage.setItem('rv_session', JSON.stringify(SESSION));
+  mostrarFormulario();
+}
+function obtenerSaludo(){
+  const h = new Date().getHours();
+  if(h >= 5 && h < 12) return 'Buenos días';
+  if(h >= 12 && h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+function mostrarFormulario(){
+  $('card-login').className = 'card hidden';
+  $('card-form').className = 'card';
+  const primerNombre = SESSION.func.split(' ')[0];
+  const nombreCapitalizado = primerNombre.charAt(0) + primerNombre.slice(1).toLowerCase();
+  $('saludo-nombre').textContent = nombreCapitalizado;
+  $('saludo-mensaje').textContent = obtenerSaludo() + ', listo para registrar tu visita';
+}
+function cambiarUsuario(){
+  SESSION = null;
+  localStorage.removeItem('rv_session');
+  asegSel = null;
+  $('pill-m').className = 'aseg-pill';
+  $('pill-c').className = 'aseg-pill';
+  $('l-func').innerHTML = '<option value="">Selecciona aseguradora primero...</option>';
+  limpiarFormulario();
+  clearAllErrors();
+  $('card-form').className = 'card hidden';
+  $('card-login').className = 'card';
+}
+function normTxt(s){
+  return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+function cargarOficinas(){
+  Papa.parse(URL_MAESTRO_OFICINAS_CSV, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(res){
+      OFICINAS = res.data.map(r => ({
+        oficina: (r['Nombre Oficina']||r['#Oficina']||'').trim(),
+        codOficina: (r['Cód. Oficina']||'').trim(),
+        codDane: (r['Cód. DANE']||'').trim(),
+        codDaneCab: (r['Cód. DANE Cabecera Municipal']||'').trim(),
+        codPostal: (r['Código Postal Oficinas']||'').trim(),
+        categoria: (r['Categoría']||'').trim(),
+        municipio: (r['Municipio']||'').trim(),
+        departamento: (r['Departamento']||'').trim(),
+        jefatura: (r['Jefaturas  Operaciones Regional']||r['Jefaturas Operaciones Regional']||'').trim(),
+        gerenciaZonal: (r['Gerencia Zonal']||'').trim(),
+        gerenciaRegional: (r['Gerencia Regional']||'').trim(),
+        tipoHorario: (r['Tipo de Horario Vigente']||'').trim(),
+        diasApertura: (r['Días de apertura']||'').trim(),
+        horarioAtencion: (r['Horario Atención']||'').trim(),
+        diasCierre: (r['Días de cierre']||'').trim(),
+        direccion: (r['Dirección']||'').trim(),
+        telefono: (r['Teléfono']||'').trim(),
+        extensiones: (r['Extensiones']||'').trim(),
+        tipologia: (r['Tipología Comercial']||'').trim(),
+        competenciaBancaria: (r['* Competencia Bancaria']||r['Competencia Bancaria']||'').trim(),
+        modalidadTransporte: (r['* Modalidad Transporte de Efectivo\n(Según contrato)']||r['Modalidad Transporte de Efectivo']||'').trim()
+      })).filter(o => o.oficina);
+      $('status-line').textContent = OFICINAS.length + ' oficinas cargadas — listo para registrar';
+      poblarRegionales();
+      poblarComercialesOperativos();
+    },
+    error: function(err){
+      $('status-line').textContent = 'No se pudo cargar la base de oficinas. Avisa al administrador.';
+      debugLog('Error al cargar oficinas: ' + err, 'err');
+    }
+  });
+}
+function poblarRegionales(regionalSel, zonalSel){
+  const regionales = [...new Set(OFICINAS.map(o => o.gerenciaRegional).filter(Boolean))].sort();
+  const selReg = $('f-regional2');
+  selReg.innerHTML = '<option value="">Seleccionar...</option>' + regionales.map(r => `<option${r===regionalSel?' selected':''}>${r}</option>`).join('');
+  onRegionalChange(zonalSel);
+}
+function onRegionalChange(zonalSel){
+  clearError('f-regional2');
+  const regional = $('f-regional2').value;
+  const selZon = $('f-zonal2');
+  if(!regional){
+    selZon.innerHTML = '<option value="">Selecciona regional primero...</option>';
+    selZon.disabled = true;
+    $('of-search').disabled = true;
+    $('of-search').placeholder = 'Selecciona regional y zonal primero...';
+    limpiarOficinaSiNoCoincide();
+    return;
+  }
+  const zonales = [...new Set(OFICINAS.filter(o => o.gerenciaRegional === regional).map(o => o.gerenciaZonal).filter(Boolean))].sort();
+  selZon.innerHTML = '<option value="">Seleccionar...</option>' + zonales.map(z => `<option${z===zonalSel?' selected':''}>${z}</option>`).join('');
+  selZon.disabled = false;
+  $('of-search').disabled = true;
+  $('of-search').placeholder = 'Selecciona zonal primero...';
+  limpiarOficinaSiNoCoincide();
+}
+function onZonalChange(){
+  clearError('f-zonal2');
+  const zonal = $('f-zonal2').value;
+  if(!zonal){
+    $('of-search').disabled = true;
+    $('of-search').placeholder = 'Selecciona zonal primero...';
+    limpiarOficinaSiNoCoincide();
+    return;
+  }
+  if(!oficinaSel){
+    $('of-search').disabled = false;
+    $('of-search').placeholder = 'Escribe ciudad o nombre de oficina...';
+  }
+  limpiarOficinaSiNoCoincide();
+}
+function limpiarOficinaSiNoCoincide(){
+  if(oficinaSel){
+    const regional = $('f-regional2').value;
+    const zonal = $('f-zonal2').value;
+    if((regional && oficinaSel.gerenciaRegional !== regional) || (zonal && oficinaSel.gerenciaZonal !== zonal)){
+      oficinaSel = null;
+      $('of-search').value = '';
+      $('sel-card').className = 'sel-card';
+      $('btn-cambiar-oficina').className = 'btn-mini-red hidden';
+    }
+  }
+}
+function poblarComercialesOperativos(){
+  ['f-com','f-ope'].forEach(id=>{
+    $(id).addEventListener('input', function(){ validarNumEntrada(id); });
+  });
+}
+function validarNumEntrada(id){
+  const el = $(id);
+  let v = el.value.replace(/\D/g,'');
+  if(v.length > 2) v = v.slice(0,2);
+  el.value = v;
+  const errId = 'err-' + id.replace('f-','');
+  const num = v === '' ? null : parseInt(v,10);
+  if(num !== null && (num > 20 || num < 1)){
+    el.classList.add('err-field');
+    $(errId).classList.add('show');
+  } else {
+    el.classList.remove('err-field');
+    $(errId).classList.remove('show');
+  }
+}
+function campoNumValido(id){
+  const v = $(id).value.trim();
+  if(v === '') return true;
+  const num = parseInt(v,10);
+  return !isNaN(num) && num >= 1 && num <= 20 && v.length <= 2;
+}
+function buscarOficina(reabrir){
+  const box = $('of-results');
+  const regional = $('f-regional2').value;
+  const zonal = $('f-zonal2').value;
+  if(!zonal){ box.className='of-results'; box.innerHTML=''; return; }
+  const q = reabrir ? '' : normTxt($('of-search').value);
+  let pool = OFICINAS.filter(o =>
+    (!regional || o.gerenciaRegional === regional) &&
+    (!zonal || o.gerenciaZonal === zonal)
+  );
+  if(q.length >= 2){
+    pool = pool.filter(o =>
+      normTxt(o.oficina).includes(q) ||
+      normTxt(o.municipio).includes(q) ||
+      normTxt(o.codOficina).includes(q)
+    );
+  }
+  const found = pool.slice(0,20);
+  if(!found.length){
+    box.innerHTML = '<div class="of-opt" style="color:var(--t3)">Sin resultados</div>';
+    box.className='of-results show';
+    return;
+  }
+  box.innerHTML = found.map((o) => {
+    const idx = OFICINAS.indexOf(o);
+    return `<div class="of-opt" onclick="selOficina(${idx})">
+      <div class="of-opt-name">${o.oficina}</div>
+      <div class="of-opt-meta">${o.municipio||''} · ${o.gerenciaRegional||''} · ${o.gerenciaZonal||''}</div>
+    </div>`;
+  }).join('');
+  box.className = 'of-results show';
+}
+function selOficina(idx){
+  oficinaSel = OFICINAS[idx];
+  $('of-search').value = oficinaSel.oficina;
+  $('of-search').disabled = true;
+  $('of-results').className = 'of-results';
+  poblarRegionales(oficinaSel.gerenciaRegional, oficinaSel.gerenciaZonal);
+  mostrarTarjetaOficina(oficinaSel);
+  $('btn-cambiar-oficina').className = 'btn-mini-red';
+  clearError('of-search');
+}
+function cambiarOficina(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  oficinaSel = null;
+  $('of-search').value = '';
+  $('of-search').disabled = false;
+  $('of-search').placeholder = 'Escribe ciudad o nombre de oficina...';
+  $('sel-card').className = 'sel-card';
+  $('btn-cambiar-oficina').className = 'btn-mini-red hidden';
+  $('of-search').focus();
+  buscarOficina(true);
+}
+function mostrarTarjetaOficina(o){
+  const sc = $('sel-card');
+  const nombre = `<i class="ti ti-building"></i> ${o.oficina}` + (o.categoria ? `<span class="osc-cat">${o.categoria}</span>` : '');
+  const dir = o.direccion ? `<div class="osc-dir"><i class="ti ti-location"></i> ${o.direccion}</div>` : '';
+  const chips = [
+    (o.municipio || o.departamento) && `<span class="of-chip"><i class="ti ti-map-pin"></i> ${[o.municipio,o.departamento].filter(Boolean).join(', ')}</span>`,
+    o.gerenciaRegional && `<span class="of-chip"><i class="ti ti-map"></i> ${o.gerenciaRegional}</span>`,
+    o.gerenciaZonal && `<span class="of-chip"><i class="ti ti-layers"></i> ${o.gerenciaZonal}</span>`,
+    o.horarioAtencion && `<span class="of-chip"><i class="ti ti-clock"></i> ${o.horarioAtencion}</span>`,
+    o.telefono && `<span class="of-chip"><i class="ti ti-phone"></i> ${o.telefono}</span>`,
+    o.diasApertura && `<span class="of-chip"><i class="ti ti-calendar-check"></i> ${o.diasApertura}</span>`,
+    o.diasCierre && `<span class="of-chip"><i class="ti ti-calendar-off"></i> ${o.diasCierre}</span>`,
+    o.codOficina && `<span class="of-chip"><i class="ti ti-building-bank"></i> Sban: ${o.codOficina}</span>`,
+    o.tipologia && `<span class="of-chip"><i class="ti ti-tag"></i> ${o.tipologia}</span>`,
+    o.modalidadTransporte && `<span class="of-chip"><i class="ti ti-truck"></i> ${o.modalidadTransporte}</span>`
+  ].filter(Boolean).join('');
+  sc.innerHTML = `<div class="osc-name">${nombre}</div>${dir}<div class="osc-chips">${chips}</div>`;
+  sc.className = 'sel-card show';
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#of-search') && !e.target.closest('#of-results')){
+    $('of-results').className = 'of-results';
+  }
+});
+function validar(){
+  let ok = true;
+  function marcarError(inputId, errId){
+    $(inputId).classList.add('err-field');
+    $(errId).classList.add('show');
+    ok = false;
+  }
+  if(!oficinaSel) marcarError('of-search','err-oficina'); else clearError('of-search');
+  if(!$('f-regional2').value) marcarError('f-regional2','err-regional'); else clearError('f-regional2');
+  if(!$('f-zonal2').value) marcarError('f-zonal2','err-zonal'); else clearError('f-zonal2');
+  if(!$('f-fecha').value.trim()) marcarError('f-fecha','err-fecha'); else clearError('f-fecha');
+  if(!$('f-modal').value) marcarError('f-modal','err-modal'); else clearError('f-modal');
+  if(!$('f-obj').value) marcarError('f-obj','err-obj'); else clearError('f-obj');
+  if(!campoNumValido('f-com')) marcarError('f-com','err-com'); else clearError('f-com');
+  if(!campoNumValido('f-ope')) marcarError('f-ope','err-ope'); else clearError('f-ope');
+  return ok;
+}
+
+// Envío vía JSONP (GET): un formulario POST hacia Apps Script pierde el
+// body en la redirección interna de Google. GET con query string no la pierde,
+// y el <script src> evita CORS. Envía y confirma en la misma llamada.
+function enviarYConfirmar(payload) {
+  debugLog('Enviando datos al servidor...', 'info');
+  const params = new URLSearchParams({ ...payload, accion: 'registrar' });
+  const url = URL_APPS_SCRIPT + '?' + params.toString();
+
+  return fetch(url)
+    .then(r => {
+      debugLog('Respuesta HTTP recibida: ' + r.status, 'info');
+      return r.json();
+    })
+    .then(data => {
+      debugLog('JSON recibido correctamente', 'ok');
+      return data;
+    })
+    .catch(err => {
+      debugLog('Fallo de fetch: ' + (err && err.message ? err.message : err), 'err');
+      return null;
+    });
+}
+
+async function registrarVisita() {
+  if (!validar()) return;
+
+  const btn = $('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Registrando...';
+
+  const ahora = new Date();
+  const payload = {
+    funcionario: SESSION.func,
+    aseguradora: SESSION.aseg,
+    estado: 'Realizada',
+    fecha: $('f-fecha').value.trim(),
+    horaRegistro: ahora.toTimeString().slice(0, 5),
+    modalidad: $('f-modal').value,
+    objetivo: $('f-obj').value,
+    comerciales: $('f-com').value,
+    operativos: $('f-ope').value,
+    oficina: oficinaSel.oficina,
+    codOficina: oficinaSel.codOficina,
+    gerenciaRegional: $('f-regional2').value,
+    gerenciaZonal: $('f-zonal2').value
+  };
+
+  try {
+    const resultado = await enviarYConfirmar(payload);
+
+    if (resultado && resultado.ok) {
+      showToast('✓ Visita registrada — fila ' + resultado.fila + ' del Sheet');
+      debugLog('Confirmado por el servidor: fila ' + resultado.fila, 'ok');
+      limpiarFormulario();
+    } else if (resultado && !resultado.ok) {
+      showToast('El servidor reportó un error: ' + resultado.error, true);
+      debugLog('Error del servidor: ' + resultado.error, 'err');
+    } else {
+      showToast('No se pudo contactar al servidor. Revisa tu conexión.', true);
+      debugLog('Sin respuesta del servidor', 'err');
+    }
+
+  } catch (e) {
+    showToast('Error al registrar. Revisa el panel de depuración.', true);
+    debugLog('Error en registrarVisita: ' + (e.message || e), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send-2"></i> Registrar visita';
+  }
+}
+
+function limpiarFormulario(){
+  oficinaSel = null;
+  $('of-search').value = '';
+  $('sel-card').className = 'sel-card';
+  $('btn-cambiar-oficina').className = 'btn-mini-red hidden';
+  poblarRegionales();
+  $('f-modal').selectedIndex = 0;
+  $('f-obj').selectedIndex = 0;
+  $('f-com').value = '';
+  $('f-ope').value = '';
+  clearError('f-com');
+  clearError('f-ope');
+  if(fpFecha) fpFecha.setDate(new Date());
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  debugLog('Página cargada', 'info');
+  fpFecha = flatpickr('#f-fecha', { dateFormat: 'Y-m-d', locale: 'es', defaultDate: 'today', allowInput: true });
+
+  $('of-search').addEventListener('input', ()=>buscarOficina(false));
+  $('of-search').addEventListener('focus', function(){
+    if(this.disabled) return;
+    buscarOficina(true);
+    this.select();
+  });
+
+  cargarOficinas();
+
+  const saved = localStorage.getItem('rv_session');
+  if(saved){
+    try{
+      SESSION = JSON.parse(saved);
+      mostrarFormulario();
+    }catch(e){
+      debugLog('Error al restaurar sesión', 'err');
+    }
+  }
+});
+</script>
+</body>
+</html>
