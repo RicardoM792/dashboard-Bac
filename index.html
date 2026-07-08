@@ -76,6 +76,7 @@ body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;backgroun
 .kpi-label i{font-size:11px;color:var(--verde-intenso)}
 .kpi-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .kpi-value{font-size:18px;font-weight:700;letter-spacing:-.4px;color:var(--text-0);font-variant-numeric:tabular-nums}
+.kpi-value .kpi-unit{font-size:11px;font-weight:600;color:var(--text-2)}
 .kpi-delta{font-size:10px;font-weight:700;white-space:nowrap}
 .kpi-delta.up{color:var(--verde-intenso)}
 .kpi-delta.down{color:var(--rojo)}
@@ -414,19 +415,34 @@ table.data tbody tr:last-child td{border-bottom:none}
             const n = safeNum(v);
             if (n === 0) return '$0';
             const abs = Math.abs(n);
-            if (abs >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
-            if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
-            if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            if (abs >= 1e12) return '$' + (n / 1e12).toFixed(2) + ' B';
+            if (abs >= 1e9)  return '$' + (n / 1e9).toFixed(2) + ' MM';
+            if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + ' M';
+            if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + ' K';
             return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
         };
         const fmtVal = v => {
             const n = safeNum(v);
             if (n === 0) return '0';
             const abs = Math.abs(n);
-            if (abs >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-            if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-            if (abs >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            if (abs >= 1e9) return (n / 1e9).toFixed(1) + ' B';
+            if (abs >= 1e9)  return (n / 1e9).toFixed(1) + ' MM';
+            if (abs >= 1e6) return (n / 1e6).toFixed(1) + ' M';
+            if (abs >= 1e3) return (n / 1e3).toFixed(1) + ' K';
             return n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+        };
+        const fmtMoneyCard = v => {
+            const n = safeNum(v);
+            if (n === 0) return '$0';
+            const abs = Math.abs(n);
+            let suffix = '';
+            let num;
+            if (abs >= 1e12) { num = (n / 1e12).toFixed(2); suffix = 'B'; }
+            else if (abs >= 1e9) { num = (n / 1e9).toFixed(2); suffix = 'MM'; }
+            else if (abs >= 1e6) { num = (n / 1e6).toFixed(2); suffix = 'M'; }
+            else if (abs >= 1e3) { num = (n / 1e3).toFixed(1); suffix = 'K'; }
+            else return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+            return '$' + num + '<span class="kpi-unit"> ' + suffix + '</span>';
         };
         const fmtNum = v => {
             const n = safeNum(v);
@@ -1367,14 +1383,14 @@ async function loadFromGoogleSheets() {
             const el = document.getElementById('page-home');
             el.innerHTML = `
             <div class="kpi-grid">
-                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
-                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoneyCard(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
                 ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
                 ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
-                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
-                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
-                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
-                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+                ${kpiCard('Devoluciones', fmtMoneyCard(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoneyCard(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoneyCard(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoneyCard(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
             </div>
             <div class="panel">
                 <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Tendencia mensual de ventas netas</div></div>
@@ -1405,6 +1421,7 @@ async function loadFromGoogleSheets() {
             const dataV = ymKeys.map(k => sumBy(byMonthV[k] || [], 'valorRecaudado'));
             const dataD = ymKeys.map(k => sumBy(byMonthD[k] || [], 'valor'));
             const dataN = dataV.map((v, i) => v - dataD[i]);
+            const dRetorno = ymKeys.map(k => sumBy(byMonthV[k] || [], 'comision'));
             const labels = ymKeys;
             const opts = baseOpts('Valor Recaudado', 'Período (Mes-Año)');
             fitChartWidth('ch-home-trend', ymKeys.length);
@@ -1439,8 +1456,8 @@ async function loadFromGoogleSheets() {
                             backgroundColor: 'rgba(211,47,47,0.85)',
                             borderRadius: 3, padding: 3, clamp: true }
                     }, {
-                        label: 'Ventas Netas',
-                        data: dataN,
+                        label: 'Retorno',
+                        data: dRetorno,
                         type: 'line',
                         borderColor: COLORS.verdeNeta,
                         backgroundColor: 'rgba(0,200,83,.1)',
@@ -1577,14 +1594,14 @@ async function loadFromGoogleSheets() {
             const el = document.getElementById('page-operacion');
             el.innerHTML = `
             <div class="kpi-grid">
-                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
-                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoneyCard(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
                 ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
                 ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
-                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
-                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
-                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
-                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+                ${kpiCard('Devoluciones', fmtMoneyCard(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoneyCard(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoneyCard(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoneyCard(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
             </div>
             <div class="grid-2">
                 <div class="panel">
@@ -1691,10 +1708,10 @@ async function loadFromGoogleSheets() {
     
     el.innerHTML = `
     <div class="kpi-grid">
-        ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+        ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
         ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
-        ${kpiCard('Ticket Promedio', fmtMoney(ventas.length > 0 ? total / ventas.length : 0), null, '', 'receipt')}
-        ${kpiCard('Prima Neta', fmtMoney(sumBy(ventas, 'primaNeta')), null, '', 'dollar-sign')}
+        ${kpiCard('Ticket Promedio', fmtMoneyCard(ventas.length > 0 ? total / ventas.length : 0), null, '', 'receipt')}
+        ${kpiCard('Prima Neta', fmtMoneyCard(sumBy(ventas, 'primaNeta')), null, '', 'dollar-sign')}
     </div>
     <div class="grid-2">
         <div class="panel">
