@@ -425,8 +425,8 @@ table.data tbody tr:last-child td{border-bottom:none}
             const n = safeNum(v);
             if (n === 0) return '0';
             const abs = Math.abs(n);
-            if (abs >= 1e9) return (n / 1e9).toFixed(1) + ' B';
-            if (abs >= 1e9)  return (n / 1e9).toFixed(1) + ' MM';
+            if (abs >= 1e12) return (n / 1e12).toFixed(2) + ' B';
+            if (abs >= 1e9) return (n / 1e9).toFixed(1) + ' MM';
             if (abs >= 1e6) return (n / 1e6).toFixed(1) + ' M';
             if (abs >= 1e3) return (n / 1e3).toFixed(1) + ' K';
             return n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
@@ -642,7 +642,10 @@ table.data tbody tr:last-child td{border-bottom:none}
                 return true;
             } catch (e) { return false; }
         }
+let _syncInProgress = false;
 async function loadFromGoogleSheets() {
+            if (_syncInProgress) return;
+            _syncInProgress = true;
             const isFirstLoad = STATE.data.ventas.length === 0;
             setSyncStatus('loading');
             const keys = ['ventas', 'devoCardif', 'devoMapfre', 'devoColmena'];
@@ -664,6 +667,7 @@ async function loadFromGoogleSheets() {
             if (results.every(r => r.status === 'rejected')) {
                 if (isFirstLoad) renderAll();
                 setSyncStatus('error');
+                _syncInProgress = false;
                 return;
             }
             STATE.lastSync = new Date();
@@ -671,27 +675,44 @@ async function loadFromGoogleSheets() {
             renderAll();
             saveCache();
             setSyncStatus(anyFailed ? 'partial' : 'ok');
+            _syncInProgress = false;
         }
         function setSyncStatus(status, message) {
             STATE.syncStatus = { status, message };
             const bar = document.getElementById('syncStatusBar');
             if (bar) renderSyncStatus(bar);
         }
-        function findField(row, keys) {
-            const norm = s => String(s).toLowerCase().trim().replace(/[_\s\/\-]+/g, '').normalize("NFD").replace(
-                /[\u0300-\u036f]/g, "");
-            const normKeys = keys.map(norm);
-            for (const rk of Object.keys(row)) {
-                const nrk = norm(rk);
-                if (normKeys.includes(nrk)) return row[rk];
-            }
-            return null;
+const _normFieldCache = new Map();
+function _normField(s) {
+    if (_normFieldCache.has(s)) return _normFieldCache.get(s);
+    const v = String(s).toLowerCase().trim().replace(/[_\s\/\-]+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    _normFieldCache.set(s, v);
+    return v;
+}
+function buildFieldResolver(row) {
+    const map = {};
+    for (const rk of Object.keys(row)) map[_normField(rk)] = rk;
+    return function findField(_row, keys) {
+        for (const k of keys) {
+            const nk = _normField(k);
+            if (map[nk] !== undefined) return row[map[nk]];
         }
+        return null;
+    };
+}
+function findField(row, keys) {
+    const normKeys = keys.map(_normField);
+    for (const rk of Object.keys(row)) {
+        if (normKeys.includes(_normField(rk))) return row[rk];
+    }
+    return null;
+}
         function processData() {
             const ventasRaw = STATE.raw.ventas;
             const ventas = [];
             for (const r of ventasRaw) {
-                const fechaVal = findField(r, ['Fecha pago efectivo', 'Fecha_pago_efectivo', 'FechaPagoEfectivo',
+                const ff = buildFieldResolver(r);
+                const fechaVal = ff(['Fecha pago efectivo', 'Fecha_pago_efectivo', 'FechaPagoEfectivo',
                     'FechaPago'
                 ]);
                 if (fechaVal == null || fechaVal === '') continue;
@@ -3148,20 +3169,21 @@ function renderRegionales() {
             tendencias: { t: 'Tendencias', s: '¿Cómo evolucionan los principales indicadores?' },
             config: { t: 'Configuración', s: 'Administración de datos' }
         };
-        function navigateTo(page) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
-            page));
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const el = document.getElementById('page-' + page);
-            if (el) el.classList.add('active');
-            const meta = PAGE_META[page] || { t: page, s: '' };
-            document.getElementById('pageTitle').innerHTML = meta.t + '<small>' + meta.s + '</small>';
-            renderPage(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => {
-                Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
-            }, 50);
-        }
+function navigateTo(page) {
+    Object.keys(STATE.charts).forEach(destroyChart);
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
+    page));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+    const meta = PAGE_META[page] || { t: page, s: '' };
+    document.getElementById('pageTitle').innerHTML = meta.t + '<small>' + meta.s + '</small>';
+    renderPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+        Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
+    }, 50);
+}
         function renderPage(page) {
             if (STATE.data.ventas.length === 0 && page !== 'config') {
                 document.getElementById('page-' + page).innerHTML = `
@@ -3227,13 +3249,18 @@ function renderRegionales() {
             updateMonthOptions();
             renderAll();
         });
+        let _filterDebounce;
+        function debouncedRenderAll() {
+            clearTimeout(_filterDebounce);
+            _filterDebounce = setTimeout(renderAll, 100);
+        }
         document.getElementById('fAseg').addEventListener('change', e => { STATE.filters.aseg = e.target.value;
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('fYear').addEventListener('change', e => { STATE.filters.year = e.target.value;
             updateMonthOptions();
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('fMonth').addEventListener('change', e => { STATE.filters.month = e.target.value;
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('btnClearFilters').addEventListener('click', () => {
             STATE.filters = { aseg: '', year: '', month: '' };
             document.getElementById('fAseg').value = '';
