@@ -76,6 +76,7 @@ body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;backgroun
 .kpi-label i{font-size:11px;color:var(--verde-intenso)}
 .kpi-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .kpi-value{font-size:18px;font-weight:700;letter-spacing:-.4px;color:var(--text-0);font-variant-numeric:tabular-nums}
+.kpi-value .kpi-unit{font-size:11px;font-weight:600;color:var(--text-2)}
 .kpi-delta{font-size:10px;font-weight:700;white-space:nowrap}
 .kpi-delta.up{color:var(--verde-intenso)}
 .kpi-delta.down{color:var(--rojo)}
@@ -414,19 +415,34 @@ table.data tbody tr:last-child td{border-bottom:none}
             const n = safeNum(v);
             if (n === 0) return '$0';
             const abs = Math.abs(n);
-            if (abs >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
-            if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
-            if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            if (abs >= 1e12) return '$' + (n / 1e12).toFixed(2) + ' B';
+            if (abs >= 1e9)  return '$' + (n / 1e9).toFixed(2) + ' MM';
+            if (abs >= 1e6) return '$' + (n / 1e6).toFixed(2) + ' M';
+            if (abs >= 1e3) return '$' + (n / 1e3).toFixed(1) + ' K';
             return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
         };
         const fmtVal = v => {
             const n = safeNum(v);
             if (n === 0) return '0';
             const abs = Math.abs(n);
-            if (abs >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-            if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-            if (abs >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            if (abs >= 1e12) return (n / 1e12).toFixed(2) + ' B';
+            if (abs >= 1e9) return (n / 1e9).toFixed(1) + ' MM';
+            if (abs >= 1e6) return (n / 1e6).toFixed(1) + ' M';
+            if (abs >= 1e3) return (n / 1e3).toFixed(1) + ' K';
             return n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+        };
+        const fmtMoneyCard = v => {
+            const n = safeNum(v);
+            if (n === 0) return '$0';
+            const abs = Math.abs(n);
+            let suffix = '';
+            let num;
+            if (abs >= 1e12) { num = (n / 1e12).toFixed(2); suffix = 'B'; }
+            else if (abs >= 1e9) { num = (n / 1e9).toFixed(2); suffix = 'MM'; }
+            else if (abs >= 1e6) { num = (n / 1e6).toFixed(2); suffix = 'M'; }
+            else if (abs >= 1e3) { num = (n / 1e3).toFixed(1); suffix = 'K'; }
+            else return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+            return '$' + num + '<span class="kpi-unit"> ' + suffix + '</span>';
         };
         const fmtNum = v => {
             const n = safeNum(v);
@@ -626,7 +642,10 @@ table.data tbody tr:last-child td{border-bottom:none}
                 return true;
             } catch (e) { return false; }
         }
+let _syncInProgress = false;
 async function loadFromGoogleSheets() {
+            if (_syncInProgress) return;
+            _syncInProgress = true;
             const isFirstLoad = STATE.data.ventas.length === 0;
             setSyncStatus('loading');
             const keys = ['ventas', 'devoCardif', 'devoMapfre', 'devoColmena'];
@@ -648,6 +667,7 @@ async function loadFromGoogleSheets() {
             if (results.every(r => r.status === 'rejected')) {
                 if (isFirstLoad) renderAll();
                 setSyncStatus('error');
+                _syncInProgress = false;
                 return;
             }
             STATE.lastSync = new Date();
@@ -655,27 +675,44 @@ async function loadFromGoogleSheets() {
             renderAll();
             saveCache();
             setSyncStatus(anyFailed ? 'partial' : 'ok');
+            _syncInProgress = false;
         }
         function setSyncStatus(status, message) {
             STATE.syncStatus = { status, message };
             const bar = document.getElementById('syncStatusBar');
             if (bar) renderSyncStatus(bar);
         }
-        function findField(row, keys) {
-            const norm = s => String(s).toLowerCase().trim().replace(/[_\s\/\-]+/g, '').normalize("NFD").replace(
-                /[\u0300-\u036f]/g, "");
-            const normKeys = keys.map(norm);
-            for (const rk of Object.keys(row)) {
-                const nrk = norm(rk);
-                if (normKeys.includes(nrk)) return row[rk];
-            }
-            return null;
+const _normFieldCache = new Map();
+function _normField(s) {
+    if (_normFieldCache.has(s)) return _normFieldCache.get(s);
+    const v = String(s).toLowerCase().trim().replace(/[_\s\/\-]+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    _normFieldCache.set(s, v);
+    return v;
+}
+function buildFieldResolver(row) {
+    const map = {};
+    for (const rk of Object.keys(row)) map[_normField(rk)] = rk;
+    return function findField(_row, keys) {
+        for (const k of keys) {
+            const nk = _normField(k);
+            if (map[nk] !== undefined) return row[map[nk]];
         }
+        return null;
+    };
+}
+function findField(row, keys) {
+    const normKeys = keys.map(_normField);
+    for (const rk of Object.keys(row)) {
+        if (normKeys.includes(_normField(rk))) return row[rk];
+    }
+    return null;
+}
         function processData() {
             const ventasRaw = STATE.raw.ventas;
             const ventas = [];
             for (const r of ventasRaw) {
-                const fechaVal = findField(r, ['Fecha pago efectivo', 'Fecha_pago_efectivo', 'FechaPagoEfectivo',
+                const ff = buildFieldResolver(r);
+                const fechaVal = ff(['Fecha pago efectivo', 'Fecha_pago_efectivo', 'FechaPagoEfectivo',
                     'FechaPago'
                 ]);
                 if (fechaVal == null || fechaVal === '') continue;
@@ -1367,14 +1404,14 @@ async function loadFromGoogleSheets() {
             const el = document.getElementById('page-home');
             el.innerHTML = `
             <div class="kpi-grid">
-                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
-                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoneyCard(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
                 ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
                 ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
-                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
-                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
-                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
-                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+                ${kpiCard('Devoluciones', fmtMoneyCard(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoneyCard(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoneyCard(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoneyCard(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
             </div>
             <div class="panel">
                 <div class="panel-header"><div class="panel-title"><i class="fas fa-chart-line"></i>Tendencia mensual de ventas netas</div></div>
@@ -1405,6 +1442,7 @@ async function loadFromGoogleSheets() {
             const dataV = ymKeys.map(k => sumBy(byMonthV[k] || [], 'valorRecaudado'));
             const dataD = ymKeys.map(k => sumBy(byMonthD[k] || [], 'valor'));
             const dataN = dataV.map((v, i) => v - dataD[i]);
+            const dRetorno = ymKeys.map(k => sumBy(byMonthV[k] || [], 'comision'));
             const labels = ymKeys;
             const opts = baseOpts('Valor Recaudado', 'Período (Mes-Año)');
             fitChartWidth('ch-home-trend', ymKeys.length);
@@ -1439,8 +1477,8 @@ async function loadFromGoogleSheets() {
                             backgroundColor: 'rgba(211,47,47,0.85)',
                             borderRadius: 3, padding: 3, clamp: true }
                     }, {
-                        label: 'Ventas Netas',
-                        data: dataN,
+                        label: 'Retorno',
+                        data: dRetorno,
                         type: 'line',
                         borderColor: COLORS.verdeNeta,
                         backgroundColor: 'rgba(0,200,83,.1)',
@@ -1577,14 +1615,14 @@ async function loadFromGoogleSheets() {
             const el = document.getElementById('page-operacion');
             el.innerHTML = `
             <div class="kpi-grid">
-                ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
-                ${kpiCard('Ventas Netas', fmtMoney(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
+                ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+                ${kpiCard('Ventas Netas', fmtMoneyCard(m.netas), dCompare.netas, compData.compareLabel, 'wallet', clsCard(dCompare.netas.pct))}
                 ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
                 ${kpiCard('Pólizas Canceladas', fmtNum(m.polizasCancel), dCompare.polC, compData.compareLabel, 'times-circle', 'danger')}
-                ${kpiCard('Devoluciones', fmtMoney(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
-                ${kpiCard('Retorno (Comisión Bruta)', fmtMoney(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
-                ${kpiCard('Comisión Neta', fmtMoney(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
-                ${kpiCard('IVA Neto', fmtMoney(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
+                ${kpiCard('Devoluciones', fmtMoneyCard(m.totalDevo), dCompare.devo, compData.compareLabel, 'undo-alt', 'danger')}
+                ${kpiCard('Retorno (Comisión Bruta)', fmtMoneyCard(m.comBruta), dCompare.retorno, compData.compareLabel, 'money-check-alt', clsCard(dCompare.retorno.pct))}
+                ${kpiCard('Comisión Neta', fmtMoneyCard(m.comNeta), dCompare.com, compData.compareLabel, 'coins', clsCard(dCompare.com.pct))}
+                ${kpiCard('IVA Neto', fmtMoneyCard(m.ivaNeto), dCompare.iva, compData.compareLabel, 'percent')}
             </div>
             <div class="grid-2">
                 <div class="panel">
@@ -1691,10 +1729,10 @@ async function loadFromGoogleSheets() {
     
     el.innerHTML = `
     <div class="kpi-grid">
-        ${kpiCard('Total Ventas', fmtMoney(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
+        ${kpiCard('Total Ventas', fmtMoneyCard(m.totalVentas), dCompare.ventas, compData.compareLabel, 'hand-holding-usd', clsCard(dCompare.ventas.pct))}
         ${kpiCard('Pólizas Vendidas', fmtNum(m.polizas), dCompare.pol, compData.compareLabel, 'file-contract')}
-        ${kpiCard('Ticket Promedio', fmtMoney(ventas.length > 0 ? total / ventas.length : 0), null, '', 'receipt')}
-        ${kpiCard('Prima Neta', fmtMoney(sumBy(ventas, 'primaNeta')), null, '', 'dollar-sign')}
+        ${kpiCard('Ticket Promedio', fmtMoneyCard(ventas.length > 0 ? total / ventas.length : 0), null, '', 'receipt')}
+        ${kpiCard('Prima Neta', fmtMoneyCard(sumBy(ventas, 'primaNeta')), null, '', 'dollar-sign')}
     </div>
     <div class="grid-2">
         <div class="panel">
@@ -3131,20 +3169,21 @@ function renderRegionales() {
             tendencias: { t: 'Tendencias', s: '¿Cómo evolucionan los principales indicadores?' },
             config: { t: 'Configuración', s: 'Administración de datos' }
         };
-        function navigateTo(page) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
-            page));
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const el = document.getElementById('page-' + page);
-            if (el) el.classList.add('active');
-            const meta = PAGE_META[page] || { t: page, s: '' };
-            document.getElementById('pageTitle').innerHTML = meta.t + '<small>' + meta.s + '</small>';
-            renderPage(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => {
-                Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
-            }, 50);
-        }
+function navigateTo(page) {
+    Object.keys(STATE.charts).forEach(destroyChart);
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page ===
+    page));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+    const meta = PAGE_META[page] || { t: page, s: '' };
+    document.getElementById('pageTitle').innerHTML = meta.t + '<small>' + meta.s + '</small>';
+    renderPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+        Object.values(STATE.charts).forEach(c => { if (c && c.resize) c.resize(); });
+    }, 50);
+}
         function renderPage(page) {
             if (STATE.data.ventas.length === 0 && page !== 'config') {
                 document.getElementById('page-' + page).innerHTML = `
@@ -3210,13 +3249,18 @@ function renderRegionales() {
             updateMonthOptions();
             renderAll();
         });
+        let _filterDebounce;
+        function debouncedRenderAll() {
+            clearTimeout(_filterDebounce);
+            _filterDebounce = setTimeout(renderAll, 100);
+        }
         document.getElementById('fAseg').addEventListener('change', e => { STATE.filters.aseg = e.target.value;
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('fYear').addEventListener('change', e => { STATE.filters.year = e.target.value;
             updateMonthOptions();
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('fMonth').addEventListener('change', e => { STATE.filters.month = e.target.value;
-            renderAll() });
+            debouncedRenderAll() });
         document.getElementById('btnClearFilters').addEventListener('click', () => {
             STATE.filters = { aseg: '', year: '', month: '' };
             document.getElementById('fAseg').value = '';
